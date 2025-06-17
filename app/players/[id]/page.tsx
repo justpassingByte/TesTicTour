@@ -114,7 +114,7 @@ const player = {
   },
 }
 
-export default function PlayerPage({ params }: { params: { id: string } }) {
+export default function PlayerPage({}: { params: { id: string } }) {
   return (
     <div className="container py-8">
       <div className="flex items-center space-x-2 text-sm text-muted-foreground mb-6">
@@ -166,7 +166,7 @@ export default function PlayerPage({ params }: { params: { id: string } }) {
                             className={`
                             ${tournament.status === "ongoing" ? "bg-primary/20 text-primary" : ""}
                             ${tournament.status === "upcoming" ? "bg-yellow-500/20 text-yellow-500" : ""}
-                            ${tournament.status === "finished" ? "bg-muted text-muted-foreground" : ""}
+                            ${tournament.status === "finished" ? "bg-transparent text-muted-foreground" : ""}
                             capitalize
                           `}
                           >
@@ -243,9 +243,9 @@ export default function PlayerPage({ params }: { params: { id: string } }) {
                               className={`
                               inline-flex items-center justify-center w-6 h-6 rounded-full text-xs font-medium
                               ${match.placement === 1 ? "bg-yellow-500/20 text-yellow-500" : ""}
-                              ${match.placement === 2 ? "bg-gray-400/20 text-gray-400" : ""}
+                              ${match.placement === 2 ? "bg-transparent text-transparent" : ""}
                               ${match.placement === 3 ? "bg-amber-700/20 text-amber-700" : ""}
-                              ${match.placement > 3 ? "bg-secondary" : ""}
+                              ${match.placement > 3 ? "bg-transparent" : ""}
                             `}
                             >
                               {match.placement}
@@ -314,7 +314,7 @@ export default function PlayerPage({ params }: { params: { id: string } }) {
                         <div className="text-sm font-medium">Top 4 Rate</div>
                         <div className="text-sm text-muted-foreground">{player.stats.topFourRate}%</div>
                       </div>
-                      <div className="h-2 w-full rounded-full bg-secondary">
+                      <div className="h-2 w-full rounded-full bg-transparent">
                         <div
                           className="h-2 rounded-full bg-primary"
                           style={{ width: `${player.stats.topFourRate}%` }}
@@ -327,7 +327,7 @@ export default function PlayerPage({ params }: { params: { id: string } }) {
                         <div className="text-sm font-medium">1st Place Rate</div>
                         <div className="text-sm text-muted-foreground">{player.stats.firstPlaceRate}%</div>
                       </div>
-                      <div className="h-2 w-full rounded-full bg-secondary">
+                      <div className="h-2 w-full rounded-full bg-transparent">
                         <div
                           className="h-2 rounded-full bg-primary"
                           style={{ width: `${player.stats.firstPlaceRate}%` }}

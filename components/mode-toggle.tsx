@@ -7,7 +7,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 
 export function ModeToggle() {
-  const { setTheme, theme } = useTheme()
+  const { setTheme} = useTheme()
 
   return (
     <TooltipProvider delayDuration={300}>

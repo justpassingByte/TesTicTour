@@ -109,7 +109,7 @@ export default function AdminDashboard() {
 
         <TabsContent value="tournaments" className="space-y-4">
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-            <Card>
+            <Card className="bg-card/60 dark:bg-card/40 backdrop-blur-lg border border-white/20 transition-all duration-300 hover:shadow-lg hover:shadow-primary/10 hover:-translate-y-1 animate-fade-in-up">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">Total Tournaments</CardTitle>
                 <Trophy className="h-4 w-4 text-muted-foreground" />
@@ -119,7 +119,7 @@ export default function AdminDashboard() {
                 <p className="text-xs text-muted-foreground">+1 from last month</p>
               </CardContent>
             </Card>
-            <Card>
+            <Card className="bg-card/60 dark:bg-card/40 backdrop-blur-lg border border-white/20 transition-all duration-300 hover:shadow-lg hover:shadow-primary/10 hover:-translate-y-1 animate-fade-in-up" style={{ animationDelay: '100ms' }}>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">Active Tournaments</CardTitle>
                 <BarChart3 className="h-4 w-4 text-muted-foreground" />
@@ -131,7 +131,7 @@ export default function AdminDashboard() {
                 </p>
               </CardContent>
             </Card>
-            <Card>
+            <Card className="bg-card/60 dark:bg-card/40 backdrop-blur-lg border border-white/20 transition-all duration-300 hover:shadow-lg hover:shadow-primary/10 hover:-translate-y-1 animate-fade-in-up" style={{ animationDelay: '200ms' }}>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">Total Players</CardTitle>
                 <Users className="h-4 w-4 text-muted-foreground" />
@@ -141,7 +141,7 @@ export default function AdminDashboard() {
                 <p className="text-xs text-muted-foreground">Across all tournaments</p>
               </CardContent>
             </Card>
-            <Card>
+            <Card className="bg-card/60 dark:bg-card/40 backdrop-blur-lg border border-white/20 transition-all duration-300 hover:shadow-lg hover:shadow-primary/10 hover:-translate-y-1 animate-fade-in-up" style={{ animationDelay: '300ms' }}>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">API Status</CardTitle>
                 <Settings className="h-4 w-4 text-muted-foreground" />
@@ -157,8 +157,12 @@ export default function AdminDashboard() {
           </div>
 
           <div className="grid gap-4">
-            {tournaments.map((tournament) => (
-              <Card key={tournament.id}>
+            {tournaments.map((tournament, index) => (
+              <Card 
+                key={tournament.id}
+                className="bg-card/60 dark:bg-card/40 backdrop-blur-lg border border-white/20 transition-all duration-300 hover:shadow-lg hover:shadow-primary/10 hover:-translate-y-1 animate-fade-in-up"
+                style={{ animationDelay: `${index * 100}ms` }}
+              >
                 <CardHeader className="pb-3">
                   <div className="flex items-center justify-between">
                     <div className="space-y-1">
@@ -292,7 +296,7 @@ export default function AdminDashboard() {
         </TabsContent>
 
         <TabsContent value="players">
-          <Card>
+          <Card className="bg-card/60 dark:bg-card/40 backdrop-blur-lg border border-white/20">
             <CardHeader>
               <CardTitle>Player Management</CardTitle>
               <CardDescription>View and manage all players across tournaments.</CardDescription>
@@ -306,7 +310,7 @@ export default function AdminDashboard() {
         </TabsContent>
 
         <TabsContent value="settings">
-          <Card>
+          <Card className="bg-card/60 dark:bg-card/40 backdrop-blur-lg border border-white/20">
             <CardHeader>
               <CardTitle>Platform Settings</CardTitle>
               <CardDescription>Configure API keys, notification settings, and platform defaults.</CardDescription>

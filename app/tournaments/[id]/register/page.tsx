@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import Link from "next/link"
 import { ChevronRight, Loader2, Search, ArrowRight, AlertCircle, CheckCircle2 } from "lucide-react"
 
@@ -11,31 +11,32 @@ import { Label } from "@/components/ui/label"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { useLanguage } from "@/components/language-provider"
+import { TournamentService } from '@/services/TournamentService'
+import { RiotApiService } from '@/services/RiotApiService'
+import { ParticipantService } from '@/services/ParticipantService'
+import { ITournament } from '@/app/types/tournament'
 
-// Mock tournament data
-const tournament = {
-  id: 1,
-  name: "TFT Championship Series",
-  status: "upcoming",
-  registrationFee: "$10",
-}
 
 // Mock regions
-const regions = [
-  { id: "ap", name: "Asia Pacific (AP)" },
-  { id: "na", name: "North America (NA)" },
-  { id: "euw", name: "Europe West (EUW)" },
-  { id: "kr", name: "Korea (KR)" },
-  { id: "br", name: "Brazil (BR)" },
-  { id: "lan", name: "Latin America North (LAN)" },
-  { id: "las", name: "Latin America South (LAS)" },
-  { id: "oce", name: "Oceania (OCE)" },
-]
+// const regions = [
+//   { id: "ap", name: "Asia Pacific (AP)" },
+//   { id: "na", name: "North America (NA)" },
+//   { id: "euw", name: "Europe West (EUW)" },
+//   { id: "kr", name: "Korea (KR)" },
+//   { id: "br", name: "Brazil (BR)" },
+//   { id: "lan", name: "Latin America North (LAN)" },
+//   { id: "las", name: "Latin America South (LAS)" },
+//   { id: "oce", name: "Oceania (OCE)" },
+// ]
 
 export default function TournamentRegistration({ params }: { params: { id: string } }) {
   const { t } = useLanguage()
+  const [tournament, setTournament] = useState<ITournament | null>(null)
+  const [loadingTournament, setLoadingTournament] = useState(true)
+  const [tournamentError, setTournamentError] = useState<string | null>(null)
   const [summonerName, setSummonerName] = useState("")
-  const [region, setRegion] = useState("ap")
+  const [gameTag, setGameTag] = useState("")
+  const [region, setRegion] = useState("AP") // Default to AP
   const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle")
   const [errorMessage, setErrorMessage] = useState("")
   const [summonerInfo, setSummonerInfo] = useState<{
@@ -46,53 +47,88 @@ export default function TournamentRegistration({ params }: { params: { id: strin
     puuid: string
   } | null>(null)
 
+  useEffect(() => {
+    const fetchTournament = async () => {
+      try {
+        setLoadingTournament(true)
+        const data = await TournamentService.detail(params.id)
+        setTournament(data)
+      } catch  {
+        setTournamentError("Error loading tournament details")
+      } finally {
+        setLoadingTournament(false)
+      }
+    }
+    fetchTournament()
+  }, [params.id])
+
   const handleSearch = async () => {
-    if (!summonerName.trim()) return
+    if (!summonerName.trim() || !gameTag.trim() || !region) return
 
     setStatus("loading")
+    setErrorMessage("")
+    setSummonerInfo(null)
 
     try {
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1500))
-
-      // Mock success response
-      if (summonerName.toLowerCase() === "error") {
-        setStatus("error")
-        setErrorMessage("Summoner not found. Please check the name and region.")
-        setSummonerInfo(null)
-      } else {
-        setStatus("success")
-        setSummonerInfo({
-          name: summonerName,
-          iconId: 29,
-          level: 312,
-          rank: "Diamond 2",
-          puuid: "PUUID-" + Math.random().toString(36).substring(2, 15),
-        })
-      }
-    } catch (error) {
+      const puuid = await RiotApiService.getSummonerPuuid(summonerName, gameTag, region)
+      // In a real application, you would also fetch summoner details (icon, level, rank) using the PUUID
+      // For now, we'll just mock it or assume we get it back with the PUUID
+      setSummonerInfo({
+        name: summonerName,
+        iconId: 0, // Placeholder
+        level: 0, // Placeholder
+        rank: "", // Placeholder
+        puuid: puuid,
+      })
+      setStatus("success")
+    } catch  {
       setStatus("error")
-      setErrorMessage("An error occurred while searching for the summoner.")
+      setErrorMessage("Summoner not found. Please check the name, tag, and region.")
       setSummonerInfo(null)
     }
   }
 
   const handleSubmit = async () => {
-    if (!summonerInfo) return
+    if (!summonerInfo || !tournament) return
 
     setStatus("loading")
+    setErrorMessage("")
 
     try {
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 2000))
-
-      // Redirect to success page (in a real app)
+      await ParticipantService.join(tournament.id) // Assuming `join` only needs tournamentId
       setStatus("success")
       window.location.href = `/tournaments/${params.id}`
-    } catch (error) {
+    } catch  {
       setStatus("error")
-      setErrorMessage("An error occurred during registration.")
+      setErrorMessage( "An error occurred during registration.")
     }
+  }
+
+  if (loadingTournament) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-screen py-12">
+        <Loader2 className="mr-2 h-16 w-16 animate-spin text-primary" />
+        <p className="mt-4 text-lg text-muted-foreground">Loading tournament details...</p>
+      </div>
+    )
+  }
+
+  if (tournamentError) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-screen py-12 text-red-500">
+        <AlertCircle className="mr-2 h-16 w-16" />
+        <p className="mt-4 text-lg">Error loading tournament: {tournamentError}</p>
+      </div>
+    )
+  }
+
+  if (!tournament) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-screen py-12 text-red-500">
+        <AlertCircle className="mr-2 h-16 w-16" />
+        <p className="mt-4 text-lg">Tournament not found.</p>
+      </div>
+    )
   }
 
   return (
@@ -110,15 +146,15 @@ export default function TournamentRegistration({ params }: { params: { id: strin
       <div className="max-w-2xl mx-auto">
         <h1 className="text-3xl font-bold mb-2">Register for {tournament.name}</h1>
         <p className="text-muted-foreground mb-8">
-          Enter your Summoner Name and select your region to register for this tournament. Registration fee:{" "}
-          {tournament.registrationFee}
+          Enter your Summoner Name and Game Tag, and select your region to register for this tournament. Registration fee:{" "}
+          {tournament.entryFee}
         </p>
 
-        <Card className="animate-fade-in">
+        <Card className="animate-fade-in bg-card/60 dark:bg-card/40 backdrop-blur-lg border border-white/20">
           <CardHeader>
             <CardTitle>Player Information</CardTitle>
             <CardDescription>
-              We'll use your Riot account to track your tournament progress automatically.
+              We will use your Riot account to track your tournament progress automatically.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
@@ -133,9 +169,17 @@ export default function TournamentRegistration({ params }: { params: { id: strin
                   className="flex-1"
                   disabled={status === "loading" || status === "success"}
                 />
+                <Input
+                  id="game-tag"
+                  value={gameTag}
+                  onChange={(e) => setGameTag(e.target.value)}
+                  placeholder="#TAG"
+                  className="w-24"
+                  disabled={status === "loading" || status === "success"}
+                />
                 <Button
                   onClick={handleSearch}
-                  disabled={!summonerName.trim() || status === "loading" || status === "success"}
+                  disabled={!summonerName.trim() || !gameTag.trim() || status === "loading" || status === "success"}
                 >
                   {status === "loading" ? (
                     <>
@@ -160,11 +204,20 @@ export default function TournamentRegistration({ params }: { params: { id: strin
                 className="grid grid-cols-1 gap-2 sm:grid-cols-2"
                 disabled={status === "loading" || status === "success"}
               >
-                {regions.map((region) => (
-                  <div key={region.id} className="flex items-center space-x-2">
-                    <RadioGroupItem value={region.id} id={region.id} />
-                    <Label htmlFor={region.id} className="cursor-pointer">
-                      {region.name}
+                {[
+                  { id: "AP", name: "Asia Pacific (AP)" },
+                  { id: "NA", name: "North America (NA)" },
+                  { id: "EUW", name: "Europe West (EUW)" },
+                  { id: "KR", name: "Korea (KR)" },
+                  { id: "BR", name: "Brazil (BR)" },
+                  { id: "LAN", name: "Latin America North (LAN)" },
+                  { id: "LAS", name: "Latin America South (LAS)" },
+                  { id: "OCE", name: "Oceania (OCE)" },
+                ].map((regionOption) => (
+                  <div key={regionOption.id} className="flex items-center space-x-2">
+                    <RadioGroupItem value={regionOption.id} id={regionOption.id} />
+                    <Label htmlFor={regionOption.id} className="cursor-pointer">
+                      {regionOption.name}
                     </Label>
                   </div>
                 ))}
@@ -193,7 +246,7 @@ export default function TournamentRegistration({ params }: { params: { id: strin
               </Alert>
             )}
 
-            <div className="rounded-md border p-4 bg-muted/50">
+            <div className="rounded-md border p-4 bg-muted/50 border-white/20">
               <h3 className="font-medium mb-2">Registration Details</h3>
               <div className="space-y-2 text-sm">
                 <div className="flex justify-between">
@@ -202,11 +255,11 @@ export default function TournamentRegistration({ params }: { params: { id: strin
                 </div>
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Registration Fee:</span>
-                  <span>{tournament.registrationFee}</span>
+                  <span>{tournament.entryFee}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Payment Method:</span>
-                  <span>Credit Card / PayPal</span>
+                  <span>Credit Card / PayPal (Payment integration not yet available)</span>
                 </div>
               </div>
             </div>

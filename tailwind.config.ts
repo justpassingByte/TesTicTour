@@ -52,6 +52,7 @@ const config: Config = {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
+        'glow-accent': '0 0% 100% 0.7, 192 100% 54% 0.6',
         "live-update": "hsl(var(--live-update))",
         eliminated: "hsl(var(--eliminated))",
         advanced: "hsl(var(--advanced))",
