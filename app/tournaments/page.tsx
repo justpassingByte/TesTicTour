@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Search, Filter, ArrowRight, Calendar, Clock, MapPin, ChevronDown } from "lucide-react"
 import Link from "next/link"
 
@@ -22,160 +22,29 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 
-// Mock tournament data
-const tournaments = [
-  {
-    id: 1,
-    name: "TFT Championship Series",
-    image: "/placeholder.svg?height=200&width=200",
-    status: "ongoing",
-    region: "AP",
-    date: "2025-06-13",
-    time: "12:00 PM UTC",
-    participants: 32,
-    maxParticipants: 64,
-    registered: true,
-    description:
-      "The biggest TFT tournament of the year, featuring top players from around the world competing for a prize pool of $10,000.",
-    registrationFee: "$10",
-    budget: "$15,000",
-  },
-  {
-    id: 2,
-    name: "Weekend Warriors Cup",
-    image: "/placeholder.svg?height=200&width=200",
-    status: "upcoming",
-    region: "NA",
-    date: "2025-06-15",
-    time: "4:00 PM UTC",
-    participants: 24,
-    maxParticipants: 64,
-    registered: false,
-    description: "A weekend tournament for casual players looking to test their skills against others.",
-    registrationFee: "$5",
-    budget: "$2,000",
-  },
-  {
-    id: 3,
-    name: "Global TFT Masters",
-    image: "/placeholder.svg?height=200&width=200",
-    status: "upcoming",
-    region: "Global",
-    date: "2025-06-20",
-    time: "10:00 AM UTC",
-    participants: 96,
-    maxParticipants: 128,
-    registered: false,
-    description: "An international tournament featuring the best players from each region.",
-    registrationFee: "$15",
-    budget: "$25,000",
-  },
-  {
-    id: 4,
-    name: "TFT Summer Showdown",
-    image: "/placeholder.svg?height=200&width=200",
-    status: "finished",
-    region: "EUW",
-    date: "2025-06-05",
-    time: "2:00 PM UTC",
-    participants: 64,
-    maxParticipants: 64,
-    registered: true,
-    description: "A summer-themed tournament with special prizes and unique challenges.",
-    registrationFee: "$8",
-    budget: "$10,000",
-  },
-  {
-    id: 5,
-    name: "Seoul Invitational",
-    image: "/placeholder.svg?height=200&width=200",
-    status: "finished",
-    region: "KR",
-    date: "2025-06-01",
-    time: "8:00 AM UTC",
-    participants: 32,
-    maxParticipants: 32,
-    registered: false,
-    description: "An exclusive tournament featuring invited players from the Korean server.",
-    registrationFee: "$20",
-    budget: "$30,000",
-  },
-  {
-    id: 6,
-    name: "TFT Asia Championship",
-    image: "/placeholder.svg?height=200&width=200",
-    status: "ongoing",
-    region: "AP",
-    date: "2025-06-12",
-    time: "9:00 AM UTC",
-    participants: 48,
-    maxParticipants: 64,
-    registered: false,
-    description: "The premier tournament for players in the Asia Pacific region.",
-    registrationFee: "$12",
-    budget: "$18,000",
-  },
-  {
-    id: 7,
-    name: "Challenger Series",
-    image: "/placeholder.svg?height=200&width=200",
-    status: "upcoming",
-    region: "NA",
-    date: "2025-06-25",
-    time: "6:00 PM UTC",
-    participants: 16,
-    maxParticipants: 32,
-    registered: false,
-    description: "A tournament exclusively for Challenger-ranked players.",
-    registrationFee: "$25",
-    budget: "$20,000",
-  },
-  {
-    id: 8,
-    name: "European Cup",
-    image: "/placeholder.svg?height=200&width=200",
-    status: "upcoming",
-    region: "EUW",
-    date: "2025-06-18",
-    time: "3:00 PM UTC",
-    participants: 40,
-    maxParticipants: 64,
-    registered: false,
-    description: "The biggest tournament for European players this season.",
-    registrationFee: "$10",
-    budget: "$15,000",
-  },
-  {
-    id: 9,
-    name: "Oceania Open",
-    image: "/placeholder.svg?height=200&width=200",
-    status: "finished",
-    region: "OCE",
-    date: "2025-05-28",
-    time: "11:00 AM UTC",
-    participants: 32,
-    maxParticipants: 32,
-    registered: false,
-    description: "An open tournament for players in the Oceania region.",
-    registrationFee: "$5",
-    budget: "$5,000",
-  },
-]
+import { ITournament } from '@/types/tournament';
+import { useTournamentStore } from '@/stores/tournamentStore'; // Import the Zustand store
+import Image from "next/image"
 
 export default function TournamentsPage() {
   const { t } = useLanguage()
+  const { tournaments, loading, error, fetchTournaments } = useTournamentStore(); // Use Zustand store
   const [searchQuery, setSearchQuery] = useState("")
   const [selectedRegion, setSelectedRegion] = useState<string | null>(null)
   const [selectedStatus, setSelectedStatus] = useState<string | null>(null)
   const [sortBy, setSortBy] = useState<string>("date")
 
+  useEffect(() => {
+    fetchTournaments(); // Fetch tournaments using the store action
+  }, [fetchTournaments]);
+
   // Filter tournaments based on search, region, and status
   const filteredTournaments = tournaments.filter((tournament) => {
     const matchesSearch =
       tournament.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      tournament.description.toLowerCase().includes(searchQuery.toLowerCase())
-    const matchesRegion = !selectedRegion || tournament.region === selectedRegion
-    const matchesStatus = !selectedStatus || tournament.status === selectedStatus
+      (tournament.description?.toLowerCase() || '').includes(searchQuery.toLowerCase()) 
+    const matchesRegion = !selectedRegion || selectedRegion === "all" || tournament.region === selectedRegion
+    const matchesStatus = !selectedStatus || selectedStatus === "all" || tournament.status === selectedStatus
 
     return matchesSearch && matchesRegion && matchesStatus
   })
@@ -186,13 +55,13 @@ export default function TournamentsPage() {
       case "name":
         return a.name.localeCompare(b.name)
       case "date":
-        return new Date(a.date).getTime() - new Date(b.date).getTime()
+        const dateA = new Date(a.startTime);
+        const dateB = new Date(b.startTime);
+        return dateA.getTime() - dateB.getTime();
       case "participants":
-        return b.participants - a.participants
+        return (b.actualParticipantsCount || 0) - (a.actualParticipantsCount || 0) 
       case "registrationFee":
-        return (
-          Number.parseFloat(a.registrationFee.replace("$", "")) - Number.parseFloat(b.registrationFee.replace("$", ""))
-        )
+        return (a.entryFee || 0) - (b.entryFee || 0) 
       default:
         return 0
     }
@@ -202,6 +71,14 @@ export default function TournamentsPage() {
     setSearchQuery("")
     setSelectedRegion(null)
     setSelectedStatus(null)
+  }
+
+  if (loading) {
+    return <div className="container py-10 text-center">Loading tournaments...</div>;
+  }
+
+  if (error) {
+    return <div className="container py-10 text-center text-red-500">Error: {error}</div>;
   }
 
   return (
@@ -237,15 +114,15 @@ export default function TournamentsPage() {
                 <SelectItem value="OCE">OCE</SelectItem>
               </SelectContent>
             </Select>
-            <Select value={selectedStatus || ""} onValueChange={(value) => setSelectedStatus(value || null)}>
+            <Select value={selectedStatus || "all"} onValueChange={(value) => setSelectedStatus(value || null)}>
               <SelectTrigger className="w-[120px]">
                 <SelectValue placeholder={t("status")} />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Status</SelectItem>
-                <SelectItem value="ongoing">Ongoing</SelectItem>
-                <SelectItem value="upcoming">Upcoming</SelectItem>
-                <SelectItem value="finished">Finished</SelectItem>
+                <SelectItem value="in_progress">Ongoing</SelectItem>
+                <SelectItem value="pending">Upcoming</SelectItem>
+                <SelectItem value="completed">Finished</SelectItem>
               </SelectContent>
             </Select>
             <DropdownMenu>
@@ -289,27 +166,27 @@ export default function TournamentsPage() {
       <Tabs defaultValue="all" className="w-full">
         <TabsList>
           <TabsTrigger value="all">All</TabsTrigger>
-          <TabsTrigger value="ongoing">
+          <TabsTrigger value="in_progress">
             <span className="flex items-center">
               Ongoing
               <Badge variant="outline" className="ml-2 bg-primary/20 text-primary">
-                {tournaments.filter((t) => t.status === "ongoing").length}
+                {tournaments.filter((t) => t.status === "in_progress").length}
               </Badge>
             </span>
           </TabsTrigger>
-          <TabsTrigger value="upcoming">
+          <TabsTrigger value="pending">
             <span className="flex items-center">
               Upcoming
               <Badge variant="outline" className="ml-2 bg-primary/20 text-primary">
-                {tournaments.filter((t) => t.status === "upcoming").length}
+                {tournaments.filter((t) => t.status === "pending").length}
               </Badge>
             </span>
           </TabsTrigger>
-          <TabsTrigger value="finished">
+          <TabsTrigger value="completed">
             <span className="flex items-center">
               Finished
               <Badge variant="outline" className="ml-2 bg-primary/20 text-primary">
-                {tournaments.filter((t) => t.status === "finished").length}
+                {tournaments.filter((t) => t.status === "completed").length}
               </Badge>
             </span>
           </TabsTrigger>
@@ -318,38 +195,38 @@ export default function TournamentsPage() {
 
         <TabsContent value="all" className="mt-4">
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {sortedTournaments.map((tournament) => (
-              <TournamentCard key={tournament.id} tournament={tournament} />
+            {sortedTournaments.map((tournament, index) => (
+              <TournamentCard key={tournament.id} tournament={tournament} index={index} />
             ))}
           </div>
         </TabsContent>
 
-        <TabsContent value="ongoing" className="mt-4">
+        <TabsContent value="in_progress" className="mt-4">
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {sortedTournaments
-              .filter((t) => t.status === "ongoing")
-              .map((tournament) => (
-                <TournamentCard key={tournament.id} tournament={tournament} />
+              .filter((t) => t.status === "in_progress")
+              .map((tournament, index) => (
+                <TournamentCard key={tournament.id} tournament={tournament} index={index}/>
               ))}
           </div>
         </TabsContent>
 
-        <TabsContent value="upcoming" className="mt-4">
+        <TabsContent value="pending" className="mt-4">
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {sortedTournaments
-              .filter((t) => t.status === "upcoming")
-              .map((tournament) => (
-                <TournamentCard key={tournament.id} tournament={tournament} />
+              .filter((t) => t.status === "pending")
+              .map((tournament, index) => (
+                <TournamentCard key={tournament.id} tournament={tournament} index={index}/>
               ))}
           </div>
         </TabsContent>
 
-        <TabsContent value="finished" className="mt-4">
+        <TabsContent value="completed" className="mt-4">
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {sortedTournaments
-              .filter((t) => t.status === "finished")
-              .map((tournament) => (
-                <TournamentCard key={tournament.id} tournament={tournament} />
+              .filter((t) => t.status === "completed")
+              .map((tournament, index) => (
+                <TournamentCard key={tournament.id} tournament={tournament} index={index}/>
               ))}
           </div>
         </TabsContent>
@@ -357,9 +234,9 @@ export default function TournamentsPage() {
         <TabsContent value="my-tournaments" className="mt-4">
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {sortedTournaments
-              .filter((t) => t.registered)
-              .map((tournament) => (
-                <TournamentCard key={tournament.id} tournament={tournament} />
+              .filter((t) => t.registered) 
+              .map((tournament, index) => (
+                <TournamentCard key={tournament.id} tournament={tournament} index={index}/>
               ))}
           </div>
         </TabsContent>
@@ -368,21 +245,29 @@ export default function TournamentsPage() {
   )
 }
 
-function TournamentCard({ tournament }: { tournament: any }) {
+function TournamentCard({ tournament, index }: { tournament: ITournament; index: number }) {
   const statusColors = {
-    ongoing: "bg-primary/20 text-primary border-primary/20 animate-pulse-subtle",
-    upcoming: "bg-yellow-500/20 text-yellow-500 border-yellow-500/20",
-    finished: "bg-muted text-muted-foreground border-muted",
+    in_progress: "bg-primary/20 text-primary border-primary/20 animate-pulse-subtle",
+    pending: "bg-yellow-500/20 text-yellow-500 border-yellow-500/20",
+    completed: "bg-muted text-muted-foreground border-muted",
   }
 
-  const statusColor = statusColors[tournament.status as keyof typeof statusColors]
+  const statusKey = tournament.status as keyof typeof statusColors;
+  const statusColor = statusColors[statusKey] || statusColors.completed; 
+
+  const formattedDate = new Date(tournament.startTime).toLocaleDateString();
+  const formattedTime = new Date(tournament.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  const registrationFeeDisplay = tournament.entryFee === 0 ? 'Free' : `$${tournament.entryFee}`;
 
   return (
-    <Card className="overflow-hidden transition-all duration-300 hover:shadow-md hover:shadow-primary/10 hover:-translate-y-1">
+    <Card 
+      className="overflow-hidden transition-all duration-300 hover:shadow-lg hover:shadow-primary/10 hover:-translate-y-1 animate-fade-in-up bg-card/60 dark:bg-card/40 backdrop-blur-lg border border-white/20"
+      style={{ animationDelay: `${index * 100}ms` }}
+    >
       <CardHeader className="p-0">
         <div className="relative aspect-[16/9] w-full overflow-hidden">
-          <img
-            src={tournament.image || "/placeholder.svg"}
+          <Image
+            src={tournament.image || "/TFT.jfif"}
             alt={tournament.name}
             className="object-cover w-full h-full"
           />
@@ -390,7 +275,7 @@ function TournamentCard({ tournament }: { tournament: any }) {
             <Badge variant="outline" className={`${statusColor} capitalize`}>
               {tournament.status}
             </Badge>
-            <Badge variant="outline" className="bg-background/80 backdrop-blur-sm">
+            <Badge variant="outline" className="bg-transparent backdrop-blur-sm">
               {tournament.region}
             </Badge>
           </div>
@@ -402,11 +287,11 @@ function TournamentCard({ tournament }: { tournament: any }) {
         <div className="grid gap-2">
           <div className="flex items-center text-sm text-muted-foreground">
             <Calendar className="mr-2 h-4 w-4" />
-            <span>{tournament.date}</span>
+            <span>{formattedDate}</span>
           </div>
           <div className="flex items-center text-sm text-muted-foreground">
             <Clock className="mr-2 h-4 w-4" />
-            <span>{tournament.time}</span>
+            <span>{formattedTime}</span>
           </div>
           <div className="flex items-center text-sm text-muted-foreground">
             <MapPin className="mr-2 h-4 w-4" />
@@ -414,12 +299,12 @@ function TournamentCard({ tournament }: { tournament: any }) {
           </div>
           <div className="flex items-center justify-between text-sm mt-2">
             <span>Registration Fee:</span>
-            <span className="font-medium">{tournament.registrationFee}</span>
+            <span className="font-medium">{registrationFeeDisplay}</span>
           </div>
           <div className="flex items-center justify-between text-sm">
             <span>Participants:</span>
             <span className="font-medium">
-              {tournament.participants}/{tournament.maxParticipants}
+              {tournament.actualParticipantsCount || 0}/{tournament.maxPlayers}
             </span>
           </div>
         </div>
@@ -431,13 +316,13 @@ function TournamentCard({ tournament }: { tournament: any }) {
             <ArrowRight className="ml-1 h-4 w-4" />
           </Button>
         </Link>
-        {tournament.status === "upcoming" && !tournament.registered && (
+        {tournament.status === "pending" && ( // Simplified condition as 'registered' is no longer directly used here
           <Link href={`/tournaments/${tournament.id}/register`}>
             <Button>Register Now</Button>
           </Link>
         )}
         {tournament.registered && (
-          <Badge variant="outline" className="bg-muted">
+          <Badge variant="outline" className="bg-transparent">
             Registered
           </Badge>
         )}

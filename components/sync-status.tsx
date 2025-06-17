@@ -29,7 +29,7 @@ export function SyncStatus({ status = "idle", onSync }: SyncStatusProps) {
         await new Promise((resolve) => setTimeout(resolve, 2000))
       }
       setCurrentStatus("live")
-    } catch (error) {
+    } catch  {
       setCurrentStatus("error")
     }
   }

@@ -11,11 +11,25 @@ import { LanguageToggle } from "@/components/language-toggle"
 import { Button } from "@/components/ui/button"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import { useLanguage } from "@/components/language-provider"
+import { useAuthModalStore } from '@/stores/authModalStore'
+import { AuthModal } from '@/components/auth/AuthModal'
 
-export function MainNav() {
+interface NavItem {
+  title: string
+  href?: string
+  disabled?: boolean
+}
+
+interface MainNavProps {
+  items?: NavItem[]
+}
+
+export function MainNav({
+}: MainNavProps) {
   const [isOpen, setIsOpen] = React.useState(false)
   const pathname = usePathname()
   const { t } = useLanguage()
+  const { openModal } = useAuthModalStore()
 
   const toggleMenu = () => setIsOpen(!isOpen)
 
@@ -53,11 +67,11 @@ export function MainNav() {
   ]
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b bg-background/80 backdrop-blur supports-[backdrop-filter]:bg-background/80">
+    <header className="sticky top-0 z-50 w-full border-b bg-transparent backdrop-blur supports-[backdrop-filter]:bg-transparent">
       <div className="container flex h-16 items-center justify-between">
         <div className="flex items-center">
           <Link href="/" className="flex items-center mr-6">
-            <span className="text-2xl font-bold tracking-tighter gradient-text">NEXUS</span>
+            <span className="text-2xl font-bold tracking-tighter gradient-text">TesTicTour</span>
           </Link>
 
           {/* Desktop Navigation */}
@@ -95,11 +109,19 @@ export function MainNav() {
           <Button variant="ghost" size="icon" className="md:hidden" onClick={toggleMenu}>
             {isOpen ? <X /> : <Menu />}
           </Button>
+
+          <Button
+            variant="ghost"
+            className="text-lg font-bold mr-4"
+            onClick={() => openModal('login')}
+          >
+            {t("header.login")}
+          </Button>
         </div>
       </div>
 
       {/* Mobile Menu */}
-      <div className={`md:hidden ${isOpen ? "block" : "hidden"} py-4 px-6 space-y-2 bg-background border-b`}>
+      <div className={`md:hidden ${isOpen ? "block" : "hidden"} py-4 px-6 space-y-2 bg-transparent border-b`}>
         {navItems.map(({ href, label, icon }) => {
           const isActive = pathname === href || pathname.startsWith(`${href}/`)
           return (
@@ -118,6 +140,8 @@ export function MainNav() {
           )
         })}
       </div>
+
+      <AuthModal />
     </header>
   )
 }

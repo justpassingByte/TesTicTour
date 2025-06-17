@@ -3,7 +3,7 @@ import { Globe } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
-import { useLanguage } from "@/components/language-provider"
+import { useLanguage, type Language } from "@/components/language-provider"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 
 const languages = [
@@ -31,7 +31,7 @@ export function LanguageToggle() {
               {languages.map((lang) => (
                 <DropdownMenuItem
                   key={lang.code}
-                  onClick={() => setLanguage(lang.code as any)}
+                  onClick={() => setLanguage(lang.code as Language)}
                   className={language === lang.code ? "bg-muted" : ""}
                 >
                   {lang.name}
