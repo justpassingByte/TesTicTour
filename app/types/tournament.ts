@@ -1,6 +1,23 @@
 import { IUser } from "./user";
 import { IRiotMatchData } from './riot';
 
+export interface IRoundOutcome {
+  id: string;
+  participantId: string;
+  roundId: string;
+  status: 'advanced' | 'eliminated';
+  scoreInRound: number;
+  round: {
+    id: string;
+    roundNumber: number;
+    phase: {
+      id: string;
+      phaseNumber: number;
+      name: string;
+    }
+  }
+}
+
 export type PrizeStructure = Record<string, number>;
 
 export interface IAdvancementConditionTopN {
@@ -70,18 +87,21 @@ export interface IParticipant {
   user?: IUser;
   paid?: boolean;
   eliminated?: boolean;
+  roundOutcomes?: IRoundOutcome[];
+  scoreTotal?: number;
 }
 
-export type PlayerRoundStats = {
+export interface PlayerRoundStats {
   id: string;
   name: string;
   region: string;
   lobbyName: string;
   placements: number[];
+  lastPlacement: number;
   points: number[];
   total: number;
   status: "advanced" | "eliminated";
-};
+}
 
 export interface ILobby {
   id: string;

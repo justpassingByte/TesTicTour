@@ -2,8 +2,8 @@
 
 import { useState } from "react"
 import Link from "next/link"
-import { Search, ArrowUpDown, Download } from "lucide-react"
-import { PlayerRoundStats, IRound } from "@/app/types/tournament"
+import { Search, ArrowUpDown, Download, Trophy } from "lucide-react"
+import { PlayerRoundStats, IRound, ITournament } from "@/app/types/tournament"
 
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -14,16 +14,21 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 
 interface ResultsTabProps {
   round: IRound
+  tournament: ITournament
   allPlayers: PlayerRoundStats[]
   numMatches: number
 }
 
-export function ResultsTab({ round, allPlayers, numMatches }: ResultsTabProps) {
+export function ResultsTab({ round, tournament, allPlayers, numMatches }: ResultsTabProps) {
   const [searchQuery, setSearchQuery] = useState("")
   const [selectedLobby, setSelectedLobby] = useState<string>("all")
   const [selectedStatus, setSelectedStatus] = useState<string>("all")
   const [sortBy, setSortBy] = useState<string>("total")
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc")
+
+  const currentPhase = tournament.phases.find(p => p.id === round.phaseId)
+  // Keep track of checkmate type but don't use it to change display mode
+  const isCheckmate = currentPhase?.type === 'checkmate';
 
   const filteredPlayers = allPlayers.filter((player) => {
     const matchesSearch = player.name.toLowerCase().includes(searchQuery.toLowerCase())
@@ -33,6 +38,18 @@ export function ResultsTab({ round, allPlayers, numMatches }: ResultsTabProps) {
   })
 
   const sortedPlayers = [...filteredPlayers].sort((a, b) => {
+    if (sortBy === 'total') {
+      const multiplier = sortOrder === 'desc' ? 1 : -1;
+      const scoreDiff = b.total - a.total;
+      if (scoreDiff !== 0) {
+        return scoreDiff * multiplier;
+      }
+      // Scores are equal, use last placement as tie-breaker (lower is better)
+      const placementDiff = a.lastPlacement - b.lastPlacement;
+      return placementDiff * multiplier;
+    }
+
+    // Fallback for other columns
     const aValue = a[sortBy as keyof typeof a]
     const bValue = b[sortBy as keyof typeof b]
     const multiplier = sortOrder === "asc" ? 1 : -1
@@ -110,15 +127,30 @@ export function ResultsTab({ round, allPlayers, numMatches }: ResultsTabProps) {
                     <ArrowUpDown className="ml-1 h-3 w-3" />
                   </Button>
                 </TableHead>
+                {/* Always display individual matches, regardless of phase type */}
                 {[...Array(numMatches).keys()].map(i => (
-                  <TableHead key={i} className="text-center">Match {i + 1}</TableHead>
+                  <TableHead key={i} className="text-center">
+                    {isCheckmate && i === 0 ? (
+                      <div className="flex items-center justify-center">
+                        Match {i + 1}
+                        {isCheckmate && <Trophy className="ml-1 h-3 w-3 text-yellow-500" />}
+                      </div>
+                    ) : (
+                      <span>Match {i + 1}</span>
+                    )}
+                  </TableHead>
                 ))}
                 <TableHead className="text-center">Status</TableHead>
                 <TableHead className="text-right">Action</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {sortedPlayers.map((player) => (
+              {sortedPlayers.map((player, index) => {
+                const rank = index + 1
+                const isRewarded = isCheckmate && rank <= 4
+                const displayStatus = isRewarded ? "rewarded" : player.status
+
+                return (
                 <TableRow key={player.id} className="hover:bg-muted/50">
                   <TableCell>
                     <Link href={`/players/${player.id}`} className="hover:text-primary font-medium">
@@ -132,6 +164,7 @@ export function ResultsTab({ round, allPlayers, numMatches }: ResultsTabProps) {
                     <Badge variant="outline">{player.region}</Badge>
                   </TableCell>
                   <TableCell className="text-center font-bold">{player.total}</TableCell>
+                  {/* Always display individual matches, regardless of phase type */}
                   {[...Array(numMatches).keys()].map(i => (
                     <TableCell key={i} className="text-center">
                       {player.placements[i] !== undefined ? (
@@ -148,6 +181,11 @@ export function ResultsTab({ round, allPlayers, numMatches }: ResultsTabProps) {
                             {player.placements[i]}
                           </span>
                           <span className="text-xs font-medium">{player.points[i]} pts</span>
+                          {isCheckmate && player.placements[i] === 1 && i === player.placements.length - 1 && (
+                            <Badge variant="outline" className="mt-1 bg-yellow-500/20 text-yellow-500 text-xs">
+                              Winner
+                            </Badge>
+                          )}
                         </div>
                       ) : (
                         <span>-</span>
@@ -158,11 +196,12 @@ export function ResultsTab({ round, allPlayers, numMatches }: ResultsTabProps) {
                     <Badge
                       variant="outline"
                       className={`
-                            ${player.status === "advanced" ? "bg-green-500/20 text-green-500" : ""}
-                            ${player.status === "eliminated" ? "bg-red-500/20 text-red-500" : ""}
+                            ${displayStatus === "advanced" ? "bg-green-500/20 text-green-500" : ""}
+                            ${displayStatus === "eliminated" ? "bg-red-500/20 text-red-500" : ""}
+                            ${displayStatus === "rewarded" ? "bg-purple-500/20 text-purple-500" : ""}
                           `}
                     >
-                      {player.status}
+                      {displayStatus}
                     </Badge>
                   </TableCell>
                   <TableCell className="text-right">
@@ -173,7 +212,8 @@ export function ResultsTab({ round, allPlayers, numMatches }: ResultsTabProps) {
                     </Link>
                   </TableCell>
                 </TableRow>
-              ))}
+                )
+              })}
             </TableBody>
           </Table>
         </CardContent>

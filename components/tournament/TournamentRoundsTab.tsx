@@ -93,7 +93,7 @@ export function TournamentRoundsTab({ tournamentId, phases }: TournamentRoundsTa
                       </div>
                       
                       <div className="mt-6">
-                        <Link href={`/tournaments/${tournamentId}/rounds/${round.roundNumber}`}>
+                        <Link href={`/tournaments/${tournamentId}/rounds/${round.id}`}>
                           <Button
                             variant={round.status === "pending" ? "secondary" : "default"}
                             className="w-full"

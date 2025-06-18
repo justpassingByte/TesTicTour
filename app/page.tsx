@@ -84,6 +84,8 @@ export default function Home() {
             <div className="relative animate-slide-up">
               <div className="aspect-[4/3] rounded-lg overflow-hidden border shadow-lg">
                 <Image
+                  width={100}
+                  height={100}
                   src="/TFT.jfif?height=600&width=800"
                   alt="TFT Tournament"
                   className="w-full h-full object-cover"
@@ -125,6 +127,8 @@ export default function Home() {
               >
                 <div className="relative aspect-[16/9] w-full overflow-hidden">
                   <Image
+                    width={100}
+                    height={100}
                     src={tournament.image || defaultTFTImage}
                     alt={tournament.name}
                     className="object-cover w-full h-full"
@@ -351,6 +355,8 @@ function TournamentCard({ tournament, index }: { tournament: ITournament, index?
       <CardHeader className="p-0">
         <div className="relative aspect-[16/9] w-full overflow-hidden">
           <Image
+            width={100}
+            height={100}
             src={tournament.image || defaultTFTImage}
             alt={tournament.name}
             className="object-cover w-full h-full"

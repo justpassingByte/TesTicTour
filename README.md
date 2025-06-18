@@ -60,7 +60,3 @@ Runs ESLint to find and fix problems in your code.
 - **UI Components:** [shadcn/ui](https://ui.shadcn.com/)
 - **State Management:** [Zustand](https://github.com/pmndrs/zustand)
 - **Form Handling:** [React Hook Form](https://react-hook-form.com/) & [Zod](https://zod.dev/)
-
-## Deployment
-
-This project is automatically deployed on Vercel. Any changes pushed to the main branch will trigger a new deployment.
