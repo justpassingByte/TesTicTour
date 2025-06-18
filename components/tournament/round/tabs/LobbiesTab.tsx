@@ -17,8 +17,19 @@ interface LobbiesTabProps {
 export function LobbiesTab({ round, allPlayers }: LobbiesTabProps) {
   return (
     <div className="space-y-4">
-      {round.lobbies?.map((lobby, index) => {
+      {round.lobbies
+        ?.slice()
+        .sort((a, b) => {
+          if (a.fetchedResult && !b.fetchedResult) return -1;
+          if (!a.fetchedResult && b.fetchedResult) return 1;
+          
+          const numA = parseInt(a.name.replace(/[^0-9]/g, '')) || 0;
+          const numB = parseInt(b.name.replace(/[^0-9]/g, '')) || 0;
+          return numA - numB;
+        })
+        .map((lobby, index) => {
         const lobbyPlayers = allPlayers.filter((p) => p.lobbyName === lobby.name)
+        const matchesInLobby = lobby.matches?.length || 0
         return (
           <Card 
             key={lobby.id}
@@ -26,10 +37,16 @@ export function LobbiesTab({ round, allPlayers }: LobbiesTabProps) {
             style={{ animationDelay: `${index * 100}ms` }}
           >
             <CardHeader>
-              <CardTitle>{lobby.name}</CardTitle>
+              <div className="flex justify-between items-center">
+                <CardTitle>{lobby.name}</CardTitle>
+                <Badge variant={lobby.fetchedResult ? "default" : "outline"}>
+                  {lobby.fetchedResult ? "Results Available" : "Pending Results"}
+                </Badge>
+              </div>
               <CardDescription>
                 {lobbyPlayers.filter((p) => p.status === "advanced").length} players advanced •{" "}
-                {lobbyPlayers.filter((p) => p.status === "eliminated").length} players eliminated
+                {lobbyPlayers.filter((p) => p.status === "eliminated").length} players eliminated •{" "}
+                {matchesInLobby} {matchesInLobby === 1 ? "match" : "matches"}
               </CardDescription>
             </CardHeader>
             <CardContent>

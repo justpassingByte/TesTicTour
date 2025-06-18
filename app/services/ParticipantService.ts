@@ -44,4 +44,14 @@ export class ParticipantService {
       throw new Error('Error removing participant');
     }
   }
-} 
+}
+
+export const getParticipantHistory = async (participantId: string): Promise<IParticipant> => {
+  try {
+    const response = await api.get(`/participants/${participantId}/history`);
+    return response.data;
+  } catch (error) {
+    console.error('Failed to fetch participant history:', error);
+    throw error;
+  }
+}; 

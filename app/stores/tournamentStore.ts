@@ -16,7 +16,7 @@ interface TournamentState {
   fetchTournaments: () => Promise<void>;
   fetchTournamentDetail: (id: string) => Promise<void>;
   fetchTournamentParticipants: (tournamentId: string, page?: number, limit?: number) => Promise<void>;
-  fetchRoundDetails: (tournamentId: string, roundNumber: number) => Promise<void>;
+  fetchRoundDetails: (tournamentId: string, roundId: string) => Promise<void>;
 }
 
 export const useTournamentStore = create<TournamentState>((set, get) => ({
@@ -65,7 +65,7 @@ export const useTournamentStore = create<TournamentState>((set, get) => ({
       set({ participantsLoading: false });
     }
   },
-  fetchRoundDetails: async (tournamentId: string, roundNumber: number) => {
+  fetchRoundDetails: async (tournamentId: string, roundId: string) => {
     set({ roundLoading: true, error: null });
     try {
       const state = get();
@@ -77,7 +77,7 @@ export const useTournamentStore = create<TournamentState>((set, get) => ({
       }
 
       const updatedState = get();
-      const round = updatedState.currentTournamentRounds.find((r) => r.roundNumber === roundNumber);
+      const round = updatedState.currentTournamentRounds.find((r) => r.id === roundId);
 
       if (round) {
         const allMatchResults: { [matchId: string]: IMatchResult[] } = {};
@@ -100,7 +100,7 @@ export const useTournamentStore = create<TournamentState>((set, get) => ({
         }
         set({ currentRoundDetails: round, matchResults: allMatchResults, roundLoading: false });
       } else {
-        throw new Error(`Round ${roundNumber} not found in tournament ${tournamentId}`);
+        throw new Error(`Round ${roundId} not found in tournament ${tournamentId}`);
       }
     } catch  {
       set({ roundLoading: false });

@@ -267,6 +267,8 @@ function TournamentCard({ tournament, index }: { tournament: ITournament; index:
       <CardHeader className="p-0">
         <div className="relative aspect-[16/9] w-full overflow-hidden">
           <Image
+            width={100}
+            height={100}
             src={tournament.image || "/TFT.jfif"}
             alt={tournament.name}
             className="object-cover w-full h-full"

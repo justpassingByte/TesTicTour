@@ -4,7 +4,7 @@ import { useEffect, use, useState } from "react"
 import { format } from "date-fns"
 import {
   Globe,
-  Medal,
+  
   Loader2,
   AlertCircle,
   Users,
@@ -20,6 +20,7 @@ import { Badge } from "@/components/ui/badge"
 import { TournamentHeader } from "@/components/tournament/TournamentHeader"
 import { TournamentScheduleCard } from "@/components/tournament/TournamentScheduleCard"
 import { TournamentFormatCard } from "@/components/tournament/TournamentFormatCard"
+import { PointSystemCard } from "@/components/tournament/PointSystemCard"
 import { useTournamentStore } from "@/app/stores/tournamentStore"
 import { TournamentTabsContent } from "@/components/tournament/TournamentTabsContent"
 import Image from "next/image"
@@ -107,38 +108,7 @@ export default function TournamentPage({ params }: { params: Promise<{ id:string
               <TournamentFormatCard tournament={tournament} />
             </div>
 
-            {tournament.phases?.[0]?.pointsMapping && (
-              <Card className="bg-card/60 dark:bg-card/40 backdrop-blur-lg border border-white/20 transition-all duration-300 hover:shadow-lg hover:shadow-primary/10 hover:-translate-y-1">
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-lg flex items-center">
-                    <Medal className="mr-2 h-5 w-5 text-primary" />
-                    Point System
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="grid grid-cols-4 gap-4 text-center mt-2">
-                    {Object.entries(tournament.phases[0].pointsMapping)
-                      .sort(([a], [b]) => parseInt(a, 10) - parseInt(b, 10))
-                      .map(([position, points], index) => (
-                        <div key={position} className="flex flex-col items-center">
-                          <div
-                            className={`
-                        w-10 h-10 rounded-full flex items-center justify-center mb-1
-                        ${index === 0 ? "bg-yellow-500/20 text-yellow-500" : ""}
-                        ${index === 1 ? "bg-gray-400/20 text-gray-400" : ""}
-                        ${index === 2 ? "bg-amber-700/20 text-amber-700" : ""}
-                        ${index > 2 ? "bg-secondary" : ""}
-                      `}
-                          >
-                            {position}
-                          </div>
-                          <div className="font-bold">{points as number} pts</div>
-                        </div>
-                      ))}
-                  </div>
-                </CardContent>
-              </Card>
-            )}
+            <PointSystemCard tournament={tournament} />
 
             <TournamentTabsContent
               tournament={tournament}
@@ -154,9 +124,11 @@ export default function TournamentPage({ params }: { params: Promise<{ id:string
             <Card className="overflow-hidden bg-card/60 dark:bg-card/40 backdrop-blur-lg border border-white/20 transition-all duration-300 hover:shadow-lg hover:shadow-primary/10 hover:-translate-y-1">
               <CardHeader className="p-0">
                 <Image
+                  width={1000}
+                  height={1000}
                   src={tournament.image || '/TFT.jfif'}
                   alt={tournament.name}
-                  className="w-full h-52 object-cover"
+                  className="object-cover"
                 />
               </CardHeader>
               <CardContent className="p-6 space-y-4">
