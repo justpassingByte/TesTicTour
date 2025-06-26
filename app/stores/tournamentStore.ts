@@ -90,7 +90,7 @@ export const useTournamentStore = create<TournamentState>((set, get) => ({
                     matchId: match.id,
                     participantId: p.puuid,
                     placement: p.placement,
-                    points: p.points,
+                    points: p.points
                   }));
                   allMatchResults[match.id] = results;
                 }

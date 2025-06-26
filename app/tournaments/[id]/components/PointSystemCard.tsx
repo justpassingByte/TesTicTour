@@ -1,3 +1,5 @@
+"use client"
+
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { ITournament } from "@/app/types/tournament"
 import { Medal } from "lucide-react"
@@ -74,4 +76,4 @@ export function PointSystemCard({ tournament }: PointSystemCardProps) {
       </CardContent>
     </Card>
   )
-} 
+}

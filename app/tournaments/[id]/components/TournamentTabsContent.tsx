@@ -2,10 +2,10 @@ import React, { useState, memo } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
 import { ITournament, IParticipant } from '@/app/types/tournament';
-import { TournamentRoundsTab } from "@/components/tournament/TournamentRoundsTab";
-import { TournamentPlayersTab } from "@/components/tournament/TournamentPlayersTab";
-import { TournamentRulesTab } from "@/components/tournament/TournamentRulesTab";
-import { TournamentDetailsTab } from "@/components/tournament/TournamentDetailsTab";
+import { TournamentRoundsTab } from "@/tournaments/[id]/components/TournamentRoundsTab";
+import { TournamentPlayersTab } from "@/tournaments/[id]/components/TournamentPlayersTab";
+import { TournamentRulesTab } from "@/tournaments/[id]/components/TournamentRulesTab";
+import { TournamentDetailsTab } from "@/tournaments/[id]/components/TournamentDetailsTab";
 
 interface TournamentTabsContentProps {
   tournament: ITournament;

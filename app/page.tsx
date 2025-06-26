@@ -1,63 +1,33 @@
-"use client"
-
-import { Search, Filter, ArrowRight, Calendar, Clock, MapPin, ChevronRight } from "lucide-react"
+import { Suspense } from "react"
+import Image from "next/image"
 import Link from "next/link"
-import { useEffect, useState } from "react"
-
+import { Calendar, Clock, MapPin, ChevronRight, ArrowRight } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { SyncStatus } from "@/components/sync-status"
-import { useTournamentStore } from "@/stores/tournamentStore"
+import { TournamentService } from "@/app/services/TournamentService"
 import { ITournament } from "@/app/types/tournament"
-import Image from "next/image"
+
+import TournamentDirectoryClient from "./components/TournamentDirectoryClient"
 
 const defaultTFTImage = "/TFT.jfif"
 
-export default function Home() {
-  const { tournaments, loading, error, fetchTournaments } = useTournamentStore()
-  const [filteredTournaments, setFilteredTournaments] = useState<ITournament[]>([])
-  const [featuredTournaments, setFeaturedTournaments] = useState<ITournament[]>([])
-  const [searchTerm, setSearchTerm] = useState("")
-  const [selectedRegion, setSelectedRegion] = useState<string | null>(null)
-  const [selectedStatus, setSelectedStatus] = useState<string | null>(null)
-
-  useEffect(() => {
-    fetchTournaments()
-  }, [fetchTournaments])
-
-  useEffect(() => {
-    // Ensure tournaments is an array before filtering
-    let tempTournaments = Array.isArray(tournaments) ? tournaments : []
-
-    if (searchTerm) {
-      tempTournaments = tempTournaments.filter((t) =>
-        t.name.toLowerCase().includes(searchTerm.toLowerCase()),
-      )
-    }
-
-    if (selectedRegion && selectedRegion !== "all") {
-      tempTournaments = tempTournaments.filter((t) => t.region === selectedRegion)
-    }
-
-    if (selectedStatus && selectedStatus !== "all") {
-      tempTournaments = tempTournaments.filter((t) => t.status === selectedStatus)
-    }
-
-    setFilteredTournaments(tempTournaments)
-    setFeaturedTournaments(tempTournaments.filter((t) => t.status === "ongoing").slice(0, 2))
-  }, [tournaments, searchTerm, selectedRegion, selectedStatus])
-
-  if (loading) {
-    return <div className="flex justify-center items-center h-screen text-xl">Loading tournaments...</div>
+// Server-side data fetching
+async function getTournaments() {
+  try {
+    const data = await TournamentService.list()
+    return data.tournaments || []
+  } catch (error) {
+    console.error("Error fetching tournaments:", error)
+    return []
   }
+}
 
-  if (error) {
-    return <div className="flex justify-center items-center h-screen text-xl text-red-500">Error: {error}</div>
-  }
+export default async function Home() {
+  const tournaments = await getTournaments()
+  const featuredTournaments = tournaments
+    .filter((t) => t.status === "in_progress")
+    .slice(0, 2)
 
   return (
     <div>
@@ -84,18 +54,19 @@ export default function Home() {
             <div className="relative animate-slide-up">
               <div className="aspect-[4/3] rounded-lg overflow-hidden border shadow-lg">
                 <Image
-                  width={100}
-                  height={100}
-                  src="/TFT.jfif?height=600&width=800"
+                  width={800}
+                  height={600}
+                  src="/TFT.jfif"
                   alt="TFT Tournament"
                   className="w-full h-full object-cover"
+                  priority
                 />
               </div>
               <div className="absolute -bottom-4 -right-4 bg-transparent p-4 rounded-lg border shadow-md">
                 <div className="flex items-center gap-2">
                   <div className="h-3 w-3 rounded-full bg-live-update animate-pulse"></div>
                   <span className="font-medium">
-                    Live Tournaments: {Array.isArray(tournaments) ? tournaments.filter((t) => t.status === "in_progress").length : 0}
+                    Live Tournaments: {tournaments.filter((t) => t.status === "in_progress").length}
                   </span>
                 </div>
               </div>
@@ -120,199 +91,16 @@ export default function Home() {
 
           <div className="grid md:grid-cols-2 gap-6">
             {featuredTournaments.map((tournament, index) => (
-              <Card 
-                key={tournament.id} 
-                className="overflow-hidden transition-all duration-300 hover:shadow-lg hover:shadow-primary/10 hover:-translate-y-1 animate-fade-in-up bg-card/60 dark:bg-card/40 backdrop-blur-lg border border-white/20"
-                style={{ animationDelay: `${index * 100}ms` }}
-              >
-                <div className="relative aspect-[16/9] w-full overflow-hidden">
-                  <Image
-                    width={100}
-                    height={100}
-                    src={tournament.image || defaultTFTImage}
-                    alt={tournament.name}
-                    className="object-cover w-full h-full"
-                  />
-                  <div className="absolute inset-0 bg-transparent"></div>
-                  <div className="absolute bottom-4 left-4 right-4">
-                    <h3 className="text-xl font-bold text-white">{tournament.name}</h3>
-                    <div className="flex items-center mt-2">
-                      <Badge variant="outline" className="bg-primary/80 text-white border-none">
-                        {tournament.status}
-                      </Badge>
-                      <Badge variant="outline" className="ml-2 bg-transparent backdrop-blur-sm">
-                        {tournament.region}
-                      </Badge>
-                    </div>
-                  </div>
-                </div>
-                <CardContent className="p-6">
-                  <div className="grid gap-2">
-                    <div className="flex items-center text-sm">
-                      <Calendar className="mr-2 h-4 w-4 text-muted-foreground" />
-                      <span>{new Date(tournament.startTime).toLocaleDateString()}</span>
-                    </div>
-                    <div className="flex items-center text-sm">
-                      <Clock className="mr-2 h-4 w-4 text-muted-foreground" />
-                      <span>{new Date(tournament.startTime).toLocaleTimeString()} UTC</span>
-                    </div>
-                    <div className="flex items-center text-sm">
-                      <MapPin className="mr-2 h-4 w-4 text-muted-foreground" />
-                      <span>{tournament.region} Region</span>
-                    </div>
-                  </div>
-                </CardContent>
-                <CardFooter className="p-6 pt-0">
-                  <Button asChild className="w-full">
-                    <Link href={`/tournaments/${tournament.id}`}>View Tournament
-                      <ArrowRight className="ml-2 h-4 w-4" />
-                    </Link>
-                  </Button>
-                </CardFooter>
-              </Card>
+              <FeaturedTournamentCard key={tournament.id} tournament={tournament} index={index} />
             ))}
           </div>
         </div>
       </section>
 
-      {/* Tournament Directory */}
-      <section className="py-12 bg-background/60 dark:bg-background/40 backdrop-blur-lg border-t border-b border-white/20">
-        <div className="container space-y-8">
-          <div>
-            <h2 className="text-3xl font-bold mb-2">Tournament Directory</h2>
-            <p className="text-muted-foreground">Browse and filter through all available tournaments</p>
-          </div>
-
-          <div className="flex flex-col space-y-4 sm:flex-row sm:items-center sm:space-y-0 sm:space-x-4">
-            <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-              <Input
-                placeholder="Search tournaments..."
-                className="pl-9"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
-            </div>
-            <div className="flex gap-2">
-              <Select value={selectedRegion || "all"} onValueChange={(value) => setSelectedRegion(value)}>
-                <SelectTrigger className="w-[120px]">
-                  <SelectValue placeholder="Region" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectGroup>
-                    <SelectItem value="all">All Regions</SelectItem>
-                    <SelectItem value="Global">Global</SelectItem>
-                    <SelectItem value="AP">AP</SelectItem>
-                    <SelectItem value="NA">NA</SelectItem>
-                    <SelectItem value="EUW">EUW</SelectItem>
-                    <SelectItem value="KR">KR</SelectItem>
-                  </SelectGroup>
-                </SelectContent>
-              </Select>
-              <Select value={selectedStatus || "all"} onValueChange={(value) => setSelectedStatus(value)}>
-                <SelectTrigger className="w-[120px]">
-                  <SelectValue placeholder="Status" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectGroup>
-                    <SelectItem value="all">All Status</SelectItem>
-                    <SelectItem value="in_progress">Ongoing</SelectItem>
-                    <SelectItem value="pending">Upcoming</SelectItem>
-                    <SelectItem value="completed">Finished</SelectItem>
-                  </SelectGroup>
-                </SelectContent>
-              </Select>
-              <Button variant="outline" size="icon">
-                <Filter className="h-4 w-4" />
-              </Button>
-            </div>
-          </div>
-
-          <Tabs defaultValue="all" className="w-full">
-            <div className="flex items-center justify-between">
-              <TabsList>
-                <TabsTrigger value="all">All</TabsTrigger>
-                <TabsTrigger value="in_progress">
-                  <span className="flex items-center">
-                    Ongoing
-                    <Badge variant="outline" className="ml-2 bg-primary/20 text-primary">
-                      {filteredTournaments.filter((t) => t.status === "in_progress").length}
-                    </Badge>
-                  </span>
-                </TabsTrigger>
-                <TabsTrigger value="pending">
-                  <span className="flex items-center">
-                    Upcoming
-                    <Badge variant="outline" className="ml-2 bg-primary/20 text-primary">
-                      {filteredTournaments.filter((t) => t.status === "pending").length}
-                    </Badge>
-                  </span>
-                </TabsTrigger>
-                <TabsTrigger value="completed">
-                  <span className="flex items-center">
-                    Finished
-                    <Badge variant="outline" className="ml-2 bg-primary/20 text-primary">
-                      {filteredTournaments.filter((t) => t.status === "completed").length}
-                    </Badge>
-                  </span>
-                </TabsTrigger>
-                <TabsTrigger value="my-tournaments">My Tournaments</TabsTrigger>
-              </TabsList>
-              <div className="hidden md:block">
-                <SyncStatus status="live" />
-              </div>
-            </div>
-
-            <TabsContent value="all" className="mt-4">
-              <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-                {filteredTournaments.map((tournament, index) => (
-                  <TournamentCard key={tournament.id} tournament={tournament} index={index} />
-                ))}
-              </div>
-            </TabsContent>
-
-            <TabsContent value="in_progress" className="mt-4">
-              <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-                {filteredTournaments
-                  .filter((t) => t.status === "in_progress")
-                  .map((tournament, index) => (
-                    <TournamentCard key={tournament.id} tournament={tournament} index={index} />
-                  ))}
-              </div>
-            </TabsContent>
-
-            <TabsContent value="pending" className="mt-4">
-              <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-                {filteredTournaments
-                  .filter((t) => t.status === "pending")
-                  .map((tournament, index) => (
-                    <TournamentCard key={tournament.id} tournament={tournament} index={index} />
-                  ))}
-              </div>
-            </TabsContent>
-
-            <TabsContent value="completed" className="mt-4">
-              <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-                {filteredTournaments
-                  .filter((t) => t.status === "completed")
-                  .map((tournament, index) => (
-                    <TournamentCard key={tournament.id} tournament={tournament} index={index} />
-                  ))}
-              </div>
-            </TabsContent>
-
-            <TabsContent value="my-tournaments" className="mt-4">
-              <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-                {filteredTournaments
-                  .filter((t) => t.registered)
-                  .map((tournament, index) => (
-                    <TournamentCard key={tournament.id} tournament={tournament} index={index} />
-                  ))}
-              </div>
-            </TabsContent>
-          </Tabs>
-        </div>
-      </section>
+      {/* Tournament Directory - Client Component with Suspense */}
+      <Suspense fallback={<TournamentDirectorySkeleton />}>
+        <TournamentDirectoryClient tournaments={tournaments} />
+      </Suspense>
 
       {/* Call to Action */}
       <section className="py-16 bg-primary/5 border-y">
@@ -337,7 +125,87 @@ export default function Home() {
   )
 }
 
-function TournamentCard({ tournament, index }: { tournament: ITournament, index?: number }) {
+// Featured Tournament Card Component
+function FeaturedTournamentCard({ tournament, index }: { tournament: ITournament, index: number }) {
+  return (
+    <Card 
+      className="overflow-hidden transition-all duration-300 hover:shadow-lg hover:shadow-primary/10 hover:-translate-y-1 animate-fade-in-up bg-card/60 dark:bg-card/40 backdrop-blur-lg border border-white/20"
+      style={{ animationDelay: `${index * 100}ms` }}
+    >
+      <div className="relative aspect-[16/9] w-full overflow-hidden">
+        <Image
+          width={600}
+          height={338}
+          src={tournament.image || defaultTFTImage}
+          alt={tournament.name}
+          className="object-cover w-full h-full"
+        />
+        <div className="absolute inset-0 bg-transparent"></div>
+        <div className="absolute bottom-4 left-4 right-4">
+          <h3 className="text-xl font-bold text-white">{tournament.name}</h3>
+          <div className="flex items-center mt-2">
+            <Badge variant="outline" className="bg-primary/80 text-white border-none">
+              {tournament.status}
+            </Badge>
+            <Badge variant="outline" className="ml-2 bg-transparent backdrop-blur-sm">
+              {tournament.region}
+            </Badge>
+          </div>
+        </div>
+      </div>
+      <CardContent className="p-6">
+        <div className="grid gap-2">
+          <div className="flex items-center text-sm">
+            <Calendar className="mr-2 h-4 w-4 text-muted-foreground" />
+            <span>{new Date(tournament.startTime).toLocaleDateString()}</span>
+          </div>
+          <div className="flex items-center text-sm">
+            <Clock className="mr-2 h-4 w-4 text-muted-foreground" />
+            <span>{new Date(tournament.startTime).toLocaleTimeString()} UTC</span>
+          </div>
+          <div className="flex items-center text-sm">
+            <MapPin className="mr-2 h-4 w-4 text-muted-foreground" />
+            <span>{tournament.region} Region</span>
+          </div>
+        </div>
+      </CardContent>
+      <CardFooter className="p-6 pt-0">
+        <Button asChild className="w-full">
+          <Link href={`/tournaments/${tournament.id}`}>View Tournament
+            <ArrowRight className="ml-2 h-4 w-4" />
+          </Link>
+        </Button>
+      </CardFooter>
+    </Card>
+  )
+}
+
+// Skeleton loader for Tournament Directory
+function TournamentDirectorySkeleton() {
+  return (
+    <section className="py-12 bg-background/60 dark:bg-background/40 backdrop-blur-lg border-t border-b border-white/20">
+      <div className="container space-y-8">
+        <div>
+          <h2 className="text-3xl font-bold mb-2">Tournament Directory</h2>
+          <p className="text-muted-foreground">Loading tournaments...</p>
+        </div>
+        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+          {[1, 2, 3, 4, 5, 6].map((i) => (
+            <div key={i} className="animate-pulse">
+              <div className="aspect-[16/9] bg-muted rounded-md mb-4"></div>
+              <div className="h-6 bg-muted rounded w-3/4 mb-2"></div>
+              <div className="h-4 bg-muted rounded w-1/2 mb-2"></div>
+              <div className="h-4 bg-muted rounded w-1/3"></div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  )
+}
+
+// Server Component for TournamentCard
+export function TournamentCard({ tournament, index }: { tournament: ITournament, index?: number }) {
   const statusColors = {
     in_progress: "bg-primary/20 text-primary border-primary/20 animate-pulse-subtle",
     pending: "bg-yellow-500/20 text-yellow-500 border-yellow-500/20",
@@ -355,8 +223,8 @@ function TournamentCard({ tournament, index }: { tournament: ITournament, index?
       <CardHeader className="p-0">
         <div className="relative aspect-[16/9] w-full overflow-hidden">
           <Image
-            width={100}
-            height={100}
+            width={400}
+            height={225}
             src={tournament.image || defaultTFTImage}
             alt={tournament.name}
             className="object-cover w-full h-full"

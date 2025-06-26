@@ -1,82 +1,53 @@
-"use client"
+import { Suspense } from "react"
+import { notFound } from "next/navigation"
 import Link from "next/link"
-import { useEffect, use, useState } from "react"
+import Image from "next/image"
 import { format } from "date-fns"
-import {
-  Globe,
-  
-  Loader2,
-  AlertCircle,
-  Users,
-  Calendar,
-  DollarSign,
-  Clock,
-  Download,
-} from "lucide-react"
-
-import { Button } from "@/components/ui/button"
+import { TournamentService } from "@/app/services/TournamentService"
+import { TournamentHeader } from "@/app/tournaments/[id]/components/TournamentHeader"
+import { TournamentScheduleCard } from "@/app/tournaments/[id]/components/TournamentScheduleCard"
+import { TournamentFormatCard } from "@/app/tournaments/[id]/components/TournamentFormatCard"
+import { PointSystemCard } from "@/app/tournaments/[id]/components/PointSystemCard"
+import TabsContentClientWrapper from "@/app/tournaments/[id]/components/TabsContentClientWrapper"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { TournamentHeader } from "@/components/tournament/TournamentHeader"
-import { TournamentScheduleCard } from "@/components/tournament/TournamentScheduleCard"
-import { TournamentFormatCard } from "@/components/tournament/TournamentFormatCard"
-import { PointSystemCard } from "@/components/tournament/PointSystemCard"
-import { useTournamentStore } from "@/app/stores/tournamentStore"
-import { TournamentTabsContent } from "@/components/tournament/TournamentTabsContent"
-import Image from "next/image"
+import { Button } from "@/components/ui/button"
+import { 
+  Globe, Users, Calendar, 
+  DollarSign, Clock, Download, Loader2
+} from "lucide-react"
 
-export default function TournamentPage({ params }: { params: Promise<{ id:string }> }) {
-  const { id: tournamentId } = use(params)
-  const {
-    currentTournament: tournament,
-    currentTournamentParticipants: participants,
-    loading,
-    error,
-    fetchTournamentDetail,
-    fetchTournamentParticipants,
-    participantsLoading,
-  } = useTournamentStore()
-  const [isInitialLoading, setIsInitialLoading] = useState(true)
-
-  useEffect(() => {
-    if (tournamentId) {
-      fetchTournamentDetail(tournamentId)
-      fetchTournamentParticipants(tournamentId)
-    }
-  }, [tournamentId, fetchTournamentDetail, fetchTournamentParticipants])
-
-  useEffect(() => {
-    if (!loading) {
-      setIsInitialLoading(false)
-    }
-  }, [loading])
-
-  if (isInitialLoading || loading) {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-screen py-12">
-        <Loader2 className="mr-2 h-16 w-16 animate-spin text-primary" />
-        <p className="mt-4 text-lg text-muted-foreground">Loading tournament details...</p>
-      </div>
-    )
+// Server-side data fetching
+async function getTournamentDetail(id: string) {
+  try {
+    const tournament = await TournamentService.detail(id)
+    return tournament
+  } catch (error) {
+    console.error(`Error fetching tournament ${id}:`, error)
+    return null
   }
+}
 
-  if (error) {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-screen py-12 text-red-500">
-        <AlertCircle className="mr-2 h-16 w-16" />
-        <p className="mt-4 text-lg">Error loading tournament: {error}</p>
-      </div>
-    )
+async function getTournamentParticipants(tournamentId: string) {
+  try {
+    const { participants } = await TournamentService.listParticipants(tournamentId, 1, 100)
+    return participants
+  } catch (error) {
+    console.error(`Error fetching participants for tournament ${tournamentId}:`, error)
+    return []
   }
+}
 
+export default async function TournamentPage({ params }: { params: { id: string } }) {
+  const resolvedParams = await Promise.resolve(params)
+  const tournament = await getTournamentDetail(resolvedParams.id)
+  
   if (!tournament) {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-screen py-12 text-red-500">
-        <AlertCircle className="mr-2 h-16 w-16" />
-        <p className="mt-4 text-lg">Tournament not found.</p>
-      </div>
-    )
+    notFound()
   }
+
+  // Pre-fetch participants for server rendering
+  const participants = await getTournamentParticipants(resolvedParams.id)
 
   // Determine status from database values
   const statusMapping = {
@@ -84,7 +55,8 @@ export default function TournamentPage({ params }: { params: Promise<{ id:string
     in_progress: { text: "Ongoing", color: "bg-primary/20 text-primary animate-pulse-subtle" },
     completed: { text: "Finished", color: "bg-muted text-muted-foreground" },
   }
-  const currentStatus = statusMapping[tournament.status as keyof typeof statusMapping] || { text: tournament.status, color: "" }
+  const currentStatus = statusMapping[tournament.status as keyof typeof statusMapping] || 
+    { text: tournament.status, color: "" }
 
   return (
     <div className="container py-8">
@@ -110,12 +82,13 @@ export default function TournamentPage({ params }: { params: Promise<{ id:string
 
             <PointSystemCard tournament={tournament} />
 
-            <TournamentTabsContent
-              tournament={tournament}
-              participants={participants}
-              fetchMoreParticipants={fetchTournamentParticipants}
-              loading={participantsLoading}
-            />
+            <Suspense fallback={<TabContentSkeleton />}>
+              {/* Use the client component wrapper */}
+              <TabsContentClientWrapper 
+                tournament={tournament}
+                participants={participants}
+              />
+            </Suspense>
           </div>
         </div>
 
@@ -156,7 +129,7 @@ export default function TournamentPage({ params }: { params: Promise<{ id:string
                 </ul>
                 <div className="grid gap-2">
                   {tournament.status === "in_progress" && (
-                     <>
+                    <>
                       <Button asChild className="w-full">
                         <Link href={`/tournaments/${tournament.id}/scoreboard`}>View Live Scoreboard</Link>
                       </Button>
@@ -165,7 +138,7 @@ export default function TournamentPage({ params }: { params: Promise<{ id:string
                       </Button>
                     </>
                   )}
-                   {tournament.status === "pending" && (
+                  {tournament.status === "pending" && (
                     <Button asChild className="w-full">
                       <Link href={`/tournaments/${tournament.id}/register`}>Register Now</Link>
                     </Button>
@@ -196,3 +169,22 @@ export default function TournamentPage({ params }: { params: Promise<{ id:string
     </div>
   )
 }
+
+// Skeleton for tab content during loading
+function TabContentSkeleton() {
+  return (
+    <div className="space-y-4">
+      <div className="flex space-x-4 border-b overflow-x-auto">
+        {[1, 2, 3, 4].map((i) => (
+          <div key={i} className="h-10 w-24 bg-muted rounded animate-pulse"></div>
+        ))}
+      </div>
+      <div className="animate-pulse space-y-4 py-4">
+        <div className="h-6 bg-muted rounded w-1/4 mb-4"></div>
+        <div className="h-4 bg-muted rounded w-full mb-2"></div>
+        <div className="h-4 bg-muted rounded w-full mb-2"></div>
+        <div className="h-4 bg-muted rounded w-3/4"></div>
+      </div>
+    </div>
+  )
+} 

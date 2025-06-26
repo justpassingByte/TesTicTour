@@ -1,6 +1,6 @@
+'use client'
 import type React from "react"
-import { Mona_Sans as FontSans } from "next/font/google"
-import type { Metadata } from "next"
+import { Inter as FontSans } from "next/font/google"
 
 import { cn } from "@/lib/utils"
 
@@ -9,17 +9,14 @@ import { ThemeProvider } from "@/components/theme-provider"
 import { LanguageProvider } from "@/components/language-provider"
 import { MainNav } from "@/components/main-nav"
 import { Footer } from "@/components/footer"
+import { Toaster } from "@/components/ui/toaster"
 
 const fontSans = FontSans({
   subsets: ["latin"],
   variable: "--font-sans",
+  display: "swap",
 })
 
-export const metadata: Metadata = {
-  title: "TesTicTour | TFT Tournament Platform",
-  description: "A futuristic platform for Teamfight Tactics tournaments",
-    generator: 'v0.dev'
-}
 
 export default function RootLayout({
   children,
@@ -33,9 +30,10 @@ export default function RootLayout({
           <LanguageProvider>
             <div className="relative flex min-h-screen flex-col">
               <MainNav />
-              <main className="flex-1">{children}</main>
+              <main className="flex-1 min-h-[calc(100vh-theme(spacing.16)-theme(spacing.16))] ">{children}</main>
               <Footer />
             </div>
+            <Toaster />
           </LanguageProvider>
         </ThemeProvider>
       </body>

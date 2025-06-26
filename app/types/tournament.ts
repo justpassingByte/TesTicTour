@@ -51,7 +51,9 @@ export interface IPhase {
   tournamentId: string;
   name:string;
   phaseNumber: number;
-  type: string;
+  type: 'elimination' | 'points' | 'checkmate' | 'swiss' | 'round_robin' | 'GROUP_STAGE' | 'KNOCKOUT';
+  numberOfGroups?: number;
+  numberOfRounds?: number;
   lobbySize?: number;
   lobbyAssignment?: string;
   advancementCondition?: IPhaseConfig['advancementCondition'];
@@ -131,35 +133,31 @@ export interface IMatchResult {
 
 export interface ITournamentTemplate {
   name: string;
-  description?: string | null;
-  image?: string | null;
-  region?: string | null;
-  status: string;
-  startTime: Date;
-  endTime?: Date;
+  description?: string;
+  rules?: string;
+  image?: string;
+  region: string;
+  status: 'DRAFT' | 'UPCOMING' | 'REGISTRATION' | 'in_progress' | 'COMPLETED' | 'CANCELLED';
+  startTime: string;
+  endTime?: string;
   maxPlayers: number;
   entryFee: number;
-  registrationDeadline: Date;
-  prizeStructure?: PrizeStructure;
+  prizeStructure?: any;
+  game: string;
+  type: 'SINGLE_ELIMINATION' | 'DOUBLE_ELIMINATION' | 'ROUND_ROBIN' | 'SWISS';
   hostFeePercent?: number;
-  expectedParticipants?: number;
-  actualParticipantsCount?: number;
-  adjustedPrizeStructure?: PrizeStructure;
-  config: { phases: IPhaseConfig[] };
-  roundsTotal: number;
-  templateId?: string;
+  checkInTime?: number;
+  phases: IPhase[];
 }
 
 export interface ITournament extends ITournamentTemplate {
   id: string;
-  organizerId: string;
   organizer: IUser;
-  status: string;
-  createdAt: string;
-  updatedAt?: string;
-  registered?: number | null;
-  image?: string | null;
-  region?: string | null;
-  phases: IPhase[];
   participants?: IParticipant[];
+  budget?: number;
+  registered?: number | null;
+  roundsTotal: number;
+  currentRound: number;
+  lastSyncTime?: string | null;
+  syncStatus?: 'SYNCING' | 'SUCCESS' | 'FAILED' | null;
 } 
