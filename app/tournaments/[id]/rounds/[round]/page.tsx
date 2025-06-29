@@ -3,10 +3,10 @@
 import { use, useEffect, useMemo } from "react"
 import { useTournamentStore } from "@/app/stores/tournamentStore"
 import { IMatchResult, PlayerRoundStats } from "@/app/types/tournament"
-import { RoundHeader } from "@/components/tournament/round/RoundHeader"
-import { RoundSummary } from "@/components/tournament/round/RoundSummary"
-import { RoundTabs } from "@/components/tournament/round/RoundTabs"
-import { RoundResultsLoading } from "@/components/tournament/round/RoundResultsLoading"
+import { RoundHeader } from "@/tournaments/[id]/components/round/RoundHeader"
+import { RoundSummary } from "@/tournaments/[id]/components/round/RoundSummary"
+import { RoundTabs } from "@/tournaments/[id]/components/round/RoundTabs"
+import { RoundResultsLoading } from "@/tournaments/[id]/components/round/RoundResultsLoading"
 
 export default function RoundResultsPage({ params: paramsPromise }: { params: Promise<{ id: string; round: string }> }) {
   const params = use(paramsPromise)

@@ -4,27 +4,51 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { useAuthModalStore } from '@/stores/authModalStore';
+import { useAuthModalStore } from '@/app/stores/authModalStore';
 import { useLanguage } from '@/components/language-provider';
+import { AuthClientService } from '@/services/AuthClientService';
+import { useUserStore } from '@/app/stores/userStore';
 
 export function AuthModal() {
   const { isOpen, view, closeModal, setView } = useAuthModalStore();
   const { t } = useLanguage();
+  const { setUser, setToken } = useUserStore();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [username, setUsername] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [loginError, setLoginError] = useState('');
+  const [registerError, setRegisterError] = useState('');
 
-  const handleLogin = () => {
-    // Login logic here
-    console.log('Login attempt:', { email, password });
-    closeModal();
+  const handleLogin = async () => {
+    setLoginError('');
+    try {
+      const { user } = await AuthClientService.login({ email, password });
+      setUser(user);
+      console.log('Login successful:', user);
+      closeModal();
+    } catch (error) {
+      setLoginError(t('auth.loginError') || 'Đăng nhập thất bại.');
+      console.error('Login failed:', error);
+    }
   };
 
-  const handleRegister = () => {
-    // Register logic here
-    console.log('Register attempt:', { username, email, password, confirmPassword });
-    closeModal();
+  const handleRegister = async () => {
+    setRegisterError('');
+    if (password !== confirmPassword) {
+      setRegisterError(t('auth.passwordMismatch') || 'Mật khẩu không khớp.');
+      return;
+    }
+    try {
+      const user = await AuthClientService.register({ username, email, password });
+      console.log('Registration successful:', user);
+      setView('login');
+      setEmail(email);
+      setPassword(password);
+    } catch (error) {
+      setRegisterError(t('auth.registerError') || 'Đăng ký thất bại.');
+      console.error('Registration failed:', error);
+    }
   };
 
   return (
@@ -61,6 +85,7 @@ export function AuthModal() {
                 onChange={(e) => setPassword(e.target.value)}
               />
             </div>
+            {loginError && <div className="text-red-500 text-sm">{loginError}</div>}
             <Button type="submit" className="w-full" onClick={handleLogin}>
               {t("auth.loginButton")}
             </Button>
@@ -104,6 +129,7 @@ export function AuthModal() {
                 onChange={(e) => setConfirmPassword(e.target.value)}
               />
             </div>
+            {registerError && <div className="text-red-500 text-sm">{registerError}</div>}
             <Button type="submit" className="w-full" onClick={handleRegister}>
               {t("auth.registerButton")}
             </Button>
