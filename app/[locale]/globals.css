@@ -1,0 +1,150 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 210 40% 98%;
+    --foreground: 240 10% 3.9%;
+    --card: hsla(210, 40%, 99%, 0.85);
+    --card-foreground: 222 47% 8%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 240 10% 3.9%;
+    --primary: 220 90% 56%;
+    --primary-foreground: 0 0% 98%;
+    --secondary: 260 60% 98%;
+    --secondary-foreground: 240 5.9% 10%;
+    --muted: 210 40% 97%;
+    --muted-foreground: 240 3.8% 46.1%;
+    --accent: 192 100% 54%;
+    --accent-foreground: 0 0% 98%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 210 30% 85%;
+    --input: 240 5.9% 90%;
+    --ring: 196 100% 47%;
+    --radius: 0.75rem;
+    --live-update: 160 84% 39%;
+    --eliminated: 0 84.2% 60.2%;
+    --advanced: 160 84% 39%;
+  }
+
+  .dark {
+    --background: 222 47% 8%;
+    --foreground: 0 0% 98%;
+    --card: hsla(222, 47%, 12%, 0.85);
+    --card-foreground: 210 40% 98%;
+    --popover: 240 10% 6%;
+    --popover-foreground: 0 0% 98%;
+    --primary: 220 90% 66%;
+    --primary-foreground: 240 5.9% 10%;
+    --secondary: 260 60% 18%;
+    --secondary-foreground: 0 0% 98%;
+    --muted: 222 47% 10%;
+    --muted-foreground: 240 5% 64.9%;
+    --accent: 192 100% 54%;
+    --accent-foreground: 240 5.9% 10%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 210 80% 60%;
+    --input: 240 3.7% 15.9%;
+    --ring: 196 100% 47%;
+    --live-update: 160 84% 39%;
+    --eliminated: 0 84.2% 60.2%;
+    --advanced: 160 84% 39%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
+html, body, .bg-background {
+  background: linear-gradient(120deg, #1ecfff 0%, #e0eafc 40%, #fbc2eb 80%, #a1c4fd 100%);
+  background-attachment: fixed;
+}
+.dark html, .dark body, .dark .bg-background {
+  background: linear-gradient(120deg, #232526 0%, #414345 60%, #283e51 100%);
+  background-attachment: fixed;
+}
+
+.glassmorphic {
+  @apply bg-background/80 backdrop-blur-md border border-border/50;
+}
+
+/* Futuristic scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  @apply bg-muted/50;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-primary/50 rounded-full transition-colors hover:bg-primary;
+}
+
+/* Animations */
+@keyframes pulse-glow {
+  0%,
+  100% {
+    box-shadow: 0 0 5px hsl(var(--primary)), 0 0 10px hsl(var(--primary));
+  }
+  50% {
+    box-shadow: 0 0 15px hsl(var(--primary)), 0 0 20px hsl(var(--primary));
+  }
+}
+
+.animate-pulse-glow {
+  animation: pulse-glow 2s ease-in-out infinite;
+}
+
+/* Grid pattern background */
+.grid-pattern {
+  background-image: linear-gradient(to right, hsl(var(--border)) 1px, transparent 1px),
+    linear-gradient(to bottom, hsl(var(--border)) 1px, transparent 1px);
+  background-size: 20px 20px;
+}
+
+/* Futuristic card hover effect */
+.card-hover-effect {
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.card-hover-effect:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+}
+
+.dark .card-hover-effect:hover {
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3), 0 8px 10px -6px rgba(0, 0, 0, 0.2);
+}
+
+/* Gradient text */
+.gradient-text {
+  @apply bg-gradient-to-r from-primary to-blue-500 bg-clip-text text-transparent;
+}
+
+/* Hero section background */
+.hero-pattern {
+  background-color: hsl(var(--background));
+  background-image: radial-gradient(hsl(var(--primary) / 0.15) 1px, transparent 1px);
+  background-size: 20px 20px;
+}
+
+@layer utilities {
+  .modern-shadow {
+    box-shadow: 0 4px 24px 0 rgba(30, 207, 255, 0.10), 0 1.5px 6px 0 rgba(30, 207, 255, 0.08);
+  }
+}
+
+.card, .panel {
+  box-shadow: 0 4px 24px 0 rgba(30, 207, 255, 0.10), 0 1.5px 6px 0 rgba(30, 207, 255, 0.08);
+}

@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { toast } from '@/components/ui/use-toast';
-import MiniTourLobbyService from "@/services/MiniTourLobbyService";
-import { MatchService } from '@/services/MatchService';
+import MiniTourLobbyService from "@/app/services/MiniTourLobbyService";
+// import { MatchService } from '@/services/MatchService'; // No longer needed for syncMatch
 // import { useBalanceStore } from "./balanceStore";
 
 export interface MiniTourLobbyParticipant {
@@ -72,6 +72,55 @@ export interface MiniTourLobby {
   };
 }
 
+export interface PartnerData {
+  partner: { name: string; logo: string; tier: string; verified: boolean; rating: number }
+  metrics: {
+    monthlyRevenue: number
+    totalRevenue: number
+    totalPlayers: number
+    activeLobbies: number
+    totalLobbies: number
+    totalMatches: number
+    revenueShare: number
+    balance: number
+  }
+}
+
+export interface AnalyticsData {
+  playerGrowth: { month: string; players: number }[]
+  revenueGrowth: { month: string; revenue: number }[]
+  performance: {
+    totalPlayers: { value: number; change: number }
+    totalRevenue: { value: number; change: number }
+    averageRating: { value: number; change: number }
+  }
+}
+
+export interface TeamMember {
+  id: string
+  name: string
+  email: string
+  role: string
+  avatar: string
+  lastActive: string
+  permissions: string[]
+}
+
+export interface Player {
+  id: string;
+  username: string;
+  email: string;
+  riotGameName?: string;
+  riotGameTag?: string;
+  region?: string;
+  role: string;
+  totalMatchesPlayed: number;
+  tournamentsWon: number;
+  balance: number;
+  isActive: boolean;
+  totalAmountWon: number;
+}
+
 export interface MiniTourLobbyState {
   lobby: MiniTourLobby | null;
   isLoading: boolean;
@@ -85,7 +134,7 @@ interface MiniTourLobbyActions {
   joinLobby: (lobbyId: string, userId: string) => Promise<void>;
   leaveLobby: (lobbyId: string) => Promise<void>;
   startLobby: (lobbyId: string) => Promise<void>;
-  syncMatch: (matchId: string) => Promise<void>;
+  syncMatch: (lobbyId: string) => Promise<void>;
   syncAllUnsyncedMatches: () => Promise<void>;
   setLobby: (lobby: MiniTourLobby) => void;
   createLobby: (formData: FormData, router: any) => Promise<void>;
@@ -109,7 +158,7 @@ export const useMiniTourLobbyStore = create<MiniTourLobbyState & MiniTourLobbyAc
     try {
       const response = await MiniTourLobbyService.createLobby(formData);
       set({ lobby: response });
-      router.push(`/dashboard/partner/minitours/${response.id}`);
+      router.push(`/dashboard/partner/lobbies/${response.id}`);
       toast({
         title: "Thành công",
         description: "Sảnh đã được tạo thành công!",
@@ -259,14 +308,14 @@ export const useMiniTourLobbyStore = create<MiniTourLobbyState & MiniTourLobbyAc
     }
   },
 
-  syncMatch: async (matchId) => {
-    set({ syncingMatchId: matchId });
+  syncMatch: async (lobbyId: string) => {
+    set({ syncingMatchId: lobbyId });
     try {
-      const response = await MatchService.syncMiniTourMatch(matchId);
-      set({ lobby: response.data.data });
+      await get().fetchLobby(lobbyId);
+      await get().syncAllUnsyncedMatches();
       toast({
         title: 'Sync Complete',
-        description: `Match ${matchId.substring(0,8)} has been synced.`,
+        description: `Match processing initiated for lobby ${lobbyId.substring(0, 8)}.`,
       });
     } catch (error) {
       console.error("Failed to sync match:", error);
@@ -283,26 +332,40 @@ export const useMiniTourLobbyStore = create<MiniTourLobbyState & MiniTourLobbyAc
 
   syncAllUnsyncedMatches: async () => {
     const lobby = get().lobby;
-    if (!lobby || !lobby.matches) return;
+    if (!lobby) return;
 
-    const unsyncedMatches = lobby.matches.filter(m => !m.fetchedAt);
-    if (unsyncedMatches.length === 0) {
-      toast({ title: "No Matches to Sync", description: "All matches are already up-to-date." });
-      return;
-    }
-
+    let hasMorePendingMatches = true;
+    let matchesSyncedCount = 0;
     set({ isProcessingAction: true });
-    toast({ title: "Syncing All Matches", description: `Starting sync for ${unsyncedMatches.length} matches...` });
+    toast({ title: "Syncing All Matches", description: "Initiating bulk sync..." });
 
     try {
-      const response = await MatchService.syncAllLobbyMatches(lobby.id);
-      set({ lobby: response.data.data });
+      while (hasMorePendingMatches) {
+        await get().fetchLobby(lobby.id);
+        const currentLobbyState = get().lobby;
+
+        if (!currentLobbyState || currentLobbyState.matches.filter(m => m.status === 'PENDING').length === 0) {
+          hasMorePendingMatches = false;
+          break;
+        }
+
+        const response = await MiniTourLobbyService.fetchLobbyMatchResult(currentLobbyState.id);
+        matchesSyncedCount++;
+        toast({
+          title: `Sync Progress (${matchesSyncedCount})`,
+          description: response.message || `Match processing queued for lobby ${currentLobbyState.id.substring(0, 8)}.`,
+        });
+
+        await new Promise(resolve => setTimeout(resolve, 1000));
+      }
+
       toast({
         title: 'Bulk Sync Complete',
-        description: `All available matches for lobby ${lobby.name} have been synced.`,
+        description: `All available pending matches for lobby ${lobby.name} have been processed. Total: ${matchesSyncedCount}`,
       });
+
     } catch (error) {
-      console.error("Failed to sync all matches:", error);
+      console.error("Failed to bulk sync matches:", error);
       const errorMessage = error instanceof Error ? error.message : "An unknown error occurred during bulk sync.";
       toast({
         title: 'Bulk Sync Failed',

@@ -46,6 +46,12 @@ const MiniTourLobbyService = {
     await api.delete(`/minitour-lobbies/${id}`);
   },
 
+  fetchLobbyMatchResult: async (lobbyId: string) => {
+    const response = await api.post<{
+      message: string; success: boolean; data: any 
+}>(`/minitour-lobbies/${lobbyId}/fetch-result`);
+    return response.data;
+  },
 };
 
 export default MiniTourLobbyService; 

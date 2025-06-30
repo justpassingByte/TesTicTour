@@ -131,6 +131,14 @@ export default function UserDetailModal({ open, onClose, userId }: UserDetailMod
               </div>
             </div>
                  <div className="grid grid-cols-1 md:grid-cols-3 gap-2 items-center">
+                    <Label className="text-muted-foreground">PUUID</Label>
+                    <div className="col-span-2">{renderInfoField('PUUID', selectedUserDetail.puuid, 'puuid')}</div>
+                 </div>
+                 <div className="grid grid-cols-1 md:grid-cols-3 gap-2 items-center">
+                    <Label className="text-muted-foreground">Region</Label>
+                    <div className="col-span-2">{renderInfoField('Region', selectedUserDetail.region, 'region')}</div>
+                 </div>
+                 <div className="grid grid-cols-1 md:grid-cols-3 gap-2 items-center">
                     <Label className="text-muted-foreground">Số dư</Label>
                     <div className="col-span-2 font-bold text-green-600">{selectedUserDetail.balance.toLocaleString('vi-VN')} đ</div>
               </div>

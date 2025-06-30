@@ -10,7 +10,7 @@ import { ModeToggle } from "@/components/mode-toggle"
 import { LanguageToggle } from "@/components/language-toggle"
 import { Button } from "@/components/ui/button"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
-import { useLanguage } from "@/components/language-provider"
+import { useTranslations, useLocale } from 'next-intl'
 import { useAuthModalStore } from '@/app/stores/authModalStore'
 import { AuthModal } from '@/components/auth/AuthModal'
 import { useUserStore } from '@/app/stores/userStore';
@@ -30,9 +30,19 @@ export function MainNav({
 }: MainNavProps) {
   const [isOpen, setIsOpen] = React.useState(false)
   const pathname = usePathname()
-  const { t } = useLanguage()
+  const locale = useLocale();
+  const t = useTranslations('common');
   const { openModal } = useAuthModalStore()
   const { user, clearUser } = useUserStore();
+
+  // Debug logs
+  console.log("[MainNav] Current locale:", locale);
+  try {
+    console.log("[MainNav] Translation test - home:", t("home"));
+    console.log("[MainNav] Translation test - tournaments:", t("tournaments"));
+  } catch (e) {
+    console.error("[MainNav] Translation failed:", e);
+  }
 
   const toggleMenu = () => setIsOpen(!isOpen)
 

@@ -5,25 +5,30 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { useAuthModalStore } from '@/app/stores/authModalStore';
-import { useLanguage } from '@/components/language-provider';
-import { AuthClientService } from '@/services/AuthClientService';
+import { useTranslations } from 'next-intl';
+import { AuthClientService } from '@/app/services/AuthClientService';
 import { useUserStore } from '@/app/stores/userStore';
 
 export function AuthModal() {
   const { isOpen, view, closeModal, setView } = useAuthModalStore();
-  const { t } = useLanguage();
-  const { setUser, setToken } = useUserStore();
-  const [email, setEmail] = useState('');
+  const t = useTranslations('common');
+  const { setUser} = useUserStore();
+  const [loginIdentifier, setLoginIdentifier] = useState('');
   const [password, setPassword] = useState('');
   const [username, setUsername] = useState('');
+  const [email, setEmail] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [gameName, setGameName] = useState('');
+  const [tagName, setTagName] = useState('');
+  const [referrer, setReferrer] = useState('');
+  const [region, setRegion] = useState('sea');
   const [loginError, setLoginError] = useState('');
   const [registerError, setRegisterError] = useState('');
 
   const handleLogin = async () => {
     setLoginError('');
     try {
-      const { user } = await AuthClientService.login({ email, password });
+      const { user } = await AuthClientService.login({ login: loginIdentifier, password });
       setUser(user);
       console.log('Login successful:', user);
       closeModal();
@@ -40,11 +45,9 @@ export function AuthModal() {
       return;
     }
     try {
-      const user = await AuthClientService.register({ username, email, password });
+      const user = await AuthClientService.register({ username, email, password, gameName, tagName, referrer, region });
       console.log('Registration successful:', user);
       setView('login');
-      setEmail(email);
-      setPassword(password);
     } catch (error) {
       setRegisterError(t('auth.registerError') || 'Đăng ký thất bại.');
       console.error('Registration failed:', error);
@@ -67,13 +70,13 @@ export function AuthModal() {
           </TabsList>
           <TabsContent value="login" className="space-y-4 pt-4">
             <div className="grid gap-2">
-              <Label htmlFor="email-login">{t("auth.email")}</Label>
+              <Label htmlFor="login-identifier">{t("auth.usernameOrEmail")}</Label>
               <Input
-                id="email-login"
-                type="email"
-                placeholder="m@example.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                id="login-identifier"
+                type="text"
+                placeholder="yourusername or m@example.com"
+                value={loginIdentifier}
+                onChange={(e) => setLoginIdentifier(e.target.value)}
               />
             </div>
             <div className="grid gap-2">
@@ -127,6 +130,46 @@ export function AuthModal() {
                 type="password"
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
+              />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="game-name-register">{t("auth.gameName")}</Label>
+              <Input
+                id="game-name-register"
+                type="text"
+                placeholder="Your in-game name"
+                value={gameName}
+                onChange={(e) => setGameName(e.target.value)}
+              />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="tag-name-register">{t("auth.tagName")}</Label>
+              <Input
+                id="tag-name-register"
+                type="text"
+                placeholder="Your in-game tag (e.g., EUW, VN2)"
+                value={tagName}
+                onChange={(e) => setTagName(e.target.value)}
+              />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="region-register">{t("auth.region")}</Label>
+              <Input
+                id="region-register"
+                type="text"
+                placeholder="e.g., SEA, NA, EU, ASIA"
+                value={region}
+                onChange={(e) => setRegion(e.target.value)}
+              />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="referrer-register">{t("auth.referrer")}</Label>
+              <Input
+                id="referrer-register"
+                type="text"
+                placeholder="Referral code or username"
+                value={referrer}
+                onChange={(e) => setReferrer(e.target.value)}
               />
             </div>
             {registerError && <div className="text-red-500 text-sm">{registerError}</div>}

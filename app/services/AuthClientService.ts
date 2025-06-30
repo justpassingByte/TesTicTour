@@ -2,7 +2,7 @@ import { IUser } from '../types/user';
 import api from '../lib/apiConfig';
 
 export class AuthClientService {
-  static async register(userData: { username: string; email: string; password: string }): Promise<IUser> {
+  static async register(userData: { username: string; email: string; password: string; gameName?: string; tagName?: string; referrer?: string; region?: string }): Promise<IUser> {
     try {
       const response = await api.post('/auth/register', userData);
       const user: IUser = response.data.user;
@@ -13,7 +13,7 @@ export class AuthClientService {
     }
   }
 
-  static async login(credentials: { email: string; password: string }): Promise<{ user: IUser }> {
+  static async login(credentials: { login: string; password: string }): Promise<{ user: IUser }> {
     try {
       const response = await api.post('/auth/login', credentials);
       return response.data;

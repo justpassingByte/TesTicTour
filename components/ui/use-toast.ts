@@ -1,3 +1,5 @@
+"use client"
+
 import * as React from "react"
 import { ToastProps } from "./toast"
 
@@ -117,7 +119,7 @@ function dispatch(action: Action) {
 
 type Toast = Omit<ToasterToast, "id" | "open">
 
-function toast({ ...props }: Toast) {
+export function toast({ ...props }: Toast) {
   const id = genId()
 
   const update = (props: ToasterToast) =>
@@ -128,8 +130,6 @@ function toast({ ...props }: Toast) {
 
   return { id: id, dismiss, update }
 }
-
-export { toast }
 
 export function useToast() {
   const [toasts, setToasts] = React.useState<State["toasts"]>(state.toasts)
@@ -146,9 +146,11 @@ export function useToast() {
   }, [])
 
   return {
-    ...state,
     toast,
     toasts,
     dismiss: (toastId?: string) => dispatch({ type: "DISMISS_TOAST", toastId }),
   }
-} 
+}
+
+// Export the useToast function as default export
+export default useToast 
