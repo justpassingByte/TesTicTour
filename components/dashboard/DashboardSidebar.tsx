@@ -1,11 +1,10 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, Users, Trophy, Gamepad2, Settings, ChartLine, Gift, DoorClosed, User } from "lucide-react";
+import { LayoutDashboard, Users, Trophy, Gamepad2, Settings, Gift, DoorClosed, User, BarChart3 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useLanguage } from "@/components/language-provider";
 import { Button } from "@/components/ui/button";
 import { useUserStore } from "@/app/stores/userStore";
-
+import { useTranslations } from 'next-intl';
 interface DashboardSidebarProps {
   userRole: string;
 }
@@ -16,7 +15,7 @@ const getNavItems = (t: any) => ({
     { href: "/dashboard/admin/users", label: t("dashboard.admin.users") || "Users", icon: <Users className="h-5 w-5" /> },
     { href: "/dashboard/admin/tournaments", label: t("dashboard.admin.tournaments") || "Tournaments", icon: <Trophy className="h-5 w-5" /> },
     { href: "/dashboard/admin/minitours", label: t("dashboard.admin.minitours") || "Mini Tours", icon: <Gamepad2 className="h-5 w-5" /> },
-    { href: "/dashboard/admin/analytics", label: t("dashboard.admin.analytics") || "Analytics", icon: <ChartLine className="h-5 w-5" /> },
+    { href: "/dashboard/admin/analytics", label: t("dashboard.admin.analytics") || "Analytics", icon: <BarChart3 className="h-5 w-5" /> },
     { href: "/dashboard/admin/settings", label: t("dashboard.admin.settings") || "Settings", icon: <Settings className="h-5 w-5" /> },
   ],
   partner: [
@@ -25,7 +24,7 @@ const getNavItems = (t: any) => ({
     { href: "/dashboard/partner/minitours", label: t("dashboard.partner.minitours") || "Mini Tours", icon: <Gamepad2 className="h-5 w-5" /> },
     { href: "/dashboard/partner/rewards", label: t("dashboard.partner.rewards") || "Rewards", icon: <Gift className="h-5 w-5" /> },
     { href: "/dashboard/partner/profile", label: t("dashboard.partner.profile") || "Profile", icon: <User className="h-5 w-5" /> },
-    { href: "/dashboard/partner/analytics", label: t("dashboard.partner.analytics") || "Analytics", icon: <ChartLine className="h-5 w-5" /> },
+    { href: "/dashboard/partner/analytics", label: t("dashboard.partner.analytics") || "Analytics", icon: <BarChart3 className="h-5 w-5" /> },
     { href: "/dashboard/partner/settings", label: t("dashboard.partner.settings") || "Settings", icon: <Settings className="h-5 w-5" /> },
   ],
   player: [
@@ -44,7 +43,7 @@ const getNavItems = (t: any) => ({
 
 export function DashboardSidebar({ userRole }: DashboardSidebarProps) {
   const pathname = usePathname();
-  const { t } = useLanguage();
+  const t = useTranslations('common');
   const { clearUser } = useUserStore();
 
   console.log("DashboardSidebar rendered:");

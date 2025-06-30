@@ -4,7 +4,7 @@ import { Loader2, RefreshCw } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import { useState } from "react"
-import { useLanguage } from "@/components/language-provider"
+import { useTranslations } from 'next-intl';
 
 type Status = "live" | "syncing" | "error" | "idle"
 
@@ -15,7 +15,7 @@ interface SyncStatusProps {
 
 export function SyncStatus({ status = "idle", onSync }: SyncStatusProps) {
   const [currentStatus, setCurrentStatus] = useState<Status>(status)
-  const { t } = useLanguage()
+  const t = useTranslations('common');
 
   const handleSync = async () => {
     if (currentStatus === "syncing") return
@@ -71,10 +71,10 @@ export function SyncStatus({ status = "idle", onSync }: SyncStatusProps) {
         </TooltipTrigger>
         <TooltipContent>
           <p>
-            {currentStatus === "live" && "Data is being updated in real-time"}
-            {currentStatus === "syncing" && "Syncing data with Riot API..."}
-            {currentStatus === "error" && "Failed to sync with Riot API"}
-            {currentStatus === "idle" && "Click to sync with Riot API"}
+            {currentStatus === "live" && t("sync_tooltip.live_updates")}
+            {currentStatus === "syncing" && t("sync_tooltip.syncing")}
+            {currentStatus === "error" && t("sync_tooltip.sync_error")}
+            {currentStatus === "idle" && t("sync_tooltip.not_synced")}
           </p>
         </TooltipContent>
       </Tooltip>
