@@ -13,18 +13,20 @@ const nextConfig = {
   images: {
     remotePatterns: [
       {
-        protocol: 'http',
-        hostname: 'localhost',
-        port: '4000',
-        pathname: '/uploads/miniTourLobbies/**',
-      },
-      {
-        protocol: 'http',
-        hostname: '127.0.0.1',
-        port: '4000',
+        protocol: 'https',
+        hostname: 'web-production-2580b.up.railway.app',
+        port: '',
         pathname: '/uploads/miniTourLobbies/**',
       },
     ],
+  },
+  async rewrites() {
+    return [
+      {
+        source: '/api/:path*',
+        destination: `${process.env.NEXT_PUBLIC_API_URL}/api/:path*`,
+      },
+    ];
   },
 }
 

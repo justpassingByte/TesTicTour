@@ -20,11 +20,11 @@ export default getRequestConfig(async ({ locale }) => {
     // Log a few message keys to verify content
     const keys = Object.keys(messages).slice(0, 5);
     console.log(`[request.ts] ${currentLocale} sample keys: ${keys.join(', ')}`);
-    
-    return {
-      messages: {
-        common: messages,
-      },
+
+  return {
+    messages: {
+      common: messages,
+    },
       locale: currentLocale,
       timeZone: 'UTC',
       formats: {

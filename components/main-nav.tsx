@@ -4,6 +4,7 @@ import * as React from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { Home, Trophy, Users, Menu, X, BarChart3, Gamepad2, LayoutDashboard } from "lucide-react"
+import { useEffect } from "react"
 
 import { cn } from "@/lib/utils"
 import { ModeToggle } from "@/components/mode-toggle"
@@ -45,6 +46,14 @@ export function MainNav({
   }
 
   const toggleMenu = () => setIsOpen(!isOpen)
+
+  // Fetch user data on component mount
+  useEffect(() => {
+    // Only fetch if user is not already set and not loading
+    if (!user) {
+      useUserStore.getState().fetchUser();
+    }
+  }, [user]); // Re-run if user state changes
 
   const navItems: NavItem[] = [
     {

@@ -29,7 +29,7 @@ export function LanguageToggle() {
   // Capture errors in case useTranslations fails
   let changeLanguageText = "Change Language";
   try {
-    const t = useTranslations('common');
+  const t = useTranslations('common');
     changeLanguageText = t('change_language');
     console.log("[LanguageToggle] Translated text:", changeLanguageText);
   } catch (error) {
@@ -41,7 +41,7 @@ export function LanguageToggle() {
     
     // Đơn giản hóa cách tạo URL mới
     let path = window.location.pathname;
-    
+
     // Xác định địa chỉ gốc (không bao gồm locale)
     let basePath = '/';
     const pathSegments = path.split('/').filter(Boolean);
