@@ -1,17 +1,38 @@
-import { redirect } from 'next/navigation';
-import React from 'react';
-import { AuthServerService } from '@/app/services/AuthServerService';
+"use client";
+
+import { useRouter } from 'next/navigation';
+import React, { useEffect } from 'react';
+import { useUserStore } from '@/app/stores/userStore';
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
 }
 
-export default async function DashboardLayout({ children }: DashboardLayoutProps) {
-  const user = await AuthServerService.getMe();
+export default function DashboardLayout({ children }: DashboardLayoutProps) {
+  const { user, loading, fetchUser } = useUserStore();
+  const router = useRouter();
 
-  if (!user) {
-    // Redirect to home to open login modal if not authenticated
-    redirect('/?auth=login');
+  useEffect(() => {
+    if (user === null && !loading) {
+      // User is not authenticated and loading is complete
+      console.log('[DashboardLayout Client] No user found and loading complete, redirecting to login.');
+      router.push('/?auth=login');
+    } else if (user && user.role !== 'admin') {
+      // User is authenticated but does not have admin role
+      console.log('[DashboardLayout Client] User is not admin, redirecting to home.');
+      router.push('/'); // Or a /forbidden page
+    }
+  }, [user, loading, router]);
+
+  // Optionally, show a loading spinner while authentication is being checked
+  if (loading) {
+    return <div className="flex items-center justify-center min-h-screen text-2xl">Loading dashboard...</div>;
+  }
+
+  // If user is null but not loading, it means they were redirected, so we don't render children yet
+  // This prevents flickering if the redirect happens immediately
+  if (user === null) {
+    return null;
   }
 
   return (
