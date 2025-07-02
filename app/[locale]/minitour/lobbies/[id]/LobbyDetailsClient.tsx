@@ -28,7 +28,7 @@ const LazyLobbyRulesTab = lazy(() => import('./components/LobbyRulesTab').then(m
 
 export function LobbyDetailsClient({ initialLobby }: LobbyDetailsClientProps) {
   const { lobby, isLoading, error, isProcessingAction, fetchLobby, joinLobby, startLobby, setLobby, syncAllUnsyncedMatches } = useMiniTourLobbyStore();
-  const { user: currentUser, loading: userLoading } = useUserStore();
+  const { currentUser, isLoading: userLoading } = useUserStore();
   const { id } = useParams();
 
   // Use setLobby only once on mount to set the initial state from props

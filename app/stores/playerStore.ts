@@ -1,6 +1,9 @@
 import { create } from 'zustand';
 import { PlayerService, PlayerMatchSummary } from '../services/PlayerService';
 import { IUser } from '../types/user';
+import { Player } from './miniTourLobbyStore';
+import { AdminService } from '../services/AdminService';
+import { PartnerService } from '../services/PartnerService';
 
 // New PlayerStats interface to match backend
 interface PlayerStats {
@@ -67,10 +70,12 @@ interface PlayerState {
   stats: PlayerStats; // Directly use the backend's PlayerStats
   isLoading: boolean;
   error: string | null;
+  allPlayers: Player[]; // New: To store a list of all players
   fetchPlayer: (playerId: string) => Promise<void>;
   fetchPlayerTournaments: (playerId: string) => Promise<void>;
   fetchPlayerMatchesSummary: (playerId: string) => Promise<void>;
   fetchPlayerMatchResults: (matchId: string) => Promise<void>;
+  fetchAllPlayers: (searchTerm?: string, referrer?: string) => Promise<void>; // Updated: Action to fetch all players with optional referrer
 }
 
 export const usePlayerStore = create<PlayerState>((set, get) => ({
@@ -90,6 +95,7 @@ export const usePlayerStore = create<PlayerState>((set, get) => ({
   },
   isLoading: true,
   error: null,
+  allPlayers: [], // Initialize new state
   
   fetchPlayer: async (playerId: string) => {
     try {
@@ -179,6 +185,24 @@ export const usePlayerStore = create<PlayerState>((set, get) => ({
       set({ playerMatches });
     } catch (error) {
       set({ error: 'Failed to fetch player matches' });
+    } finally {
+      set({ isLoading: false });
+    }
+  },
+
+  fetchAllPlayers: async (searchTerm?: string, referrer?: string) => {
+    set({ isLoading: true, error: null });
+    try {
+      let players: Player[];
+      if (referrer) {
+        players = await PartnerService.getUsersByReferrer(referrer, searchTerm);
+      } else {
+        players = await AdminService.getAllUsers(searchTerm);
+      }
+      set({ allPlayers: players });
+    } catch (error) {
+      console.error("Failed to fetch all players:", error);
+      set({ error: "Failed to fetch all players data" });
     } finally {
       set({ isLoading: false });
     }

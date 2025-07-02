@@ -2,7 +2,7 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Coins, PlayCircle, Trophy } from "lucide-react"
-import type { MiniTourLobby } from "@/stores/miniTourLobbyStore"
+import type { MiniTourLobby } from "@/app/stores/miniTourLobbyStore"
 
 interface LobbyOverviewTabProps {
   lobby: MiniTourLobby

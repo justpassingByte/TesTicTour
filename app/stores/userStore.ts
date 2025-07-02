@@ -1,68 +1,41 @@
 import { create } from 'zustand';
 import { IUser } from '@/app/types/user';
-import api from '@/app/lib/apiConfig';
+import { AuthClientService } from '@/app/services/AuthClientService';
+import { toast } from '@/components/ui/use-toast';
 
 interface UserState {
-  user: IUser | null;
-  loading: boolean;
-  setUser: (user: IUser | null) => void;
-  clearUser: () => void;
-  fetchUser: () => Promise<void>;
+  currentUser: IUser | null;
+  isLoading: boolean;
+  error: string | null;
 }
 
-export const useUserStore = create<UserState>((set, get) => {
-  console.log("UserStore: Initializing with user=null, loading=true");
-  return {
-    user: null,
-    loading: true,
+interface UserActions {
+  setCurrentUser: (user: IUser | null) => void;
+  clearUser: () => void;
+  initializeUser: () => Promise<void>;
+}
 
-    setUser: (user) => {
-      console.log("UserStore: Setting user:", user);
-      set({ user });
-      set({ loading: false });
-      console.log("UserStore: User set, setting loading to false.");
+export const useUserStore = create<UserState & UserActions>((set) => ({
+  currentUser: null,
+  isLoading: true, // Set to true initially to indicate loading on app start
+  error: null,
 
-      if (typeof window !== 'undefined') {
-        if (user) {
-          localStorage.setItem('authUser', JSON.stringify(user));
-        } else {
-          localStorage.removeItem('authUser');
-        }
-      }
-    },
-    clearUser: () => {
-      console.log("UserStore: Clearing user");
-      set({ user: null, loading: false });
-      if (typeof window !== 'undefined') {
-        localStorage.removeItem('authUser');
-      }
-    },
-    fetchUser: async () => {
-      const currentUser = get().user;
-      console.log("UserStore: fetchUser called. Current user:", currentUser, "Current loading:", get().loading);
+  setCurrentUser: (user) => set({ currentUser: user, isLoading: false, error: null }),
+  clearUser: () => set({ currentUser: null, isLoading: false, error: null }),
 
-      // If user is already in store, no need to fetch
-      if (currentUser) {
-        console.log("UserStore: User already exists, no fetch needed, setting loading=false");
-        set({ loading: false });
-        return;
-      }
-      
-      // If no current user, try to fetch (relying on HttpOnly cookie)
-      set({ loading: true });
-      console.log("UserStore: Starting fetch, setting loading=true");
-      try {
-        const response = await api.get('/auth/me'); // Rely on HttpOnly cookie being sent automatically
-        console.log("UserStore: Fetch success. User data:", response.data);
-        get().setUser(response.data.user); // Make sure response.data is { user: IUser }
-      } catch (e) {
-        console.error("UserStore: Error fetching user data:", e);
-        set({ user: null, loading: false });
-        if (typeof window !== 'undefined') {
-          localStorage.removeItem('authUser');
-          // localStorage.removeItem('authToken'); // This might still be needed if backend also puts it in localStorage for some reason, but less likely.
-        }
-      }
-    },
-  };
-}); 
+  initializeUser: async () => {
+    set({ isLoading: true, error: null });
+    try {
+      const user = await AuthClientService.fetchCurrentUser();
+      set({ currentUser: user, isLoading: false });
+    } catch (err: any) {
+      console.error("Failed to initialize user:", err);
+      set({ currentUser: null, isLoading: false, error: err.message || "Failed to load user data." });
+      toast({
+        title: "Error",
+        description: "Failed to load user session. Please try logging in again.",
+        variant: "destructive",
+      });
+    }
+  },
+})); 

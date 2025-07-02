@@ -46,6 +46,11 @@ const MiniTourLobbyService = {
     await api.delete(`/minitour-lobbies/${id}`);
   },
 
+  assignPlayerToLobby: async (lobbyId: string, userId: string): Promise<MiniTourLobby> => {
+    const response = await api.post<{ success: boolean; data: MiniTourLobby }>(`/minitour-lobbies/${lobbyId}/assign-player`, { userId });
+    return response.data.data;
+  },
+
   fetchLobbyMatchResult: async (lobbyId: string) => {
     const response = await api.post<{
       message: string; success: boolean; data: any 

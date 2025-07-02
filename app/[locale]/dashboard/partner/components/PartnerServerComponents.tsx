@@ -13,7 +13,7 @@ import {
   Users,
 } from "lucide-react"
 
-import { MiniTourLobby, PartnerData, AnalyticsData } from "@/stores/miniTourLobbyStore"
+import { MiniTourLobby, PartnerData, AnalyticsData } from "@/app/stores/miniTourLobbyStore"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -33,7 +33,6 @@ import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Switch } from "@/components/ui/switch"
-import api from "@/lib/apiConfig"
 
 // --- ASYNC COMPONENTS ---
 
@@ -206,7 +205,7 @@ export async function OverviewTab({ partnerData, lobbies }: { partnerData: Partn
                       <span>
                         {lobby.currentPlayers}/{lobby.maxPlayers} players
                       </span>
-                      <span>{lobby.matches.length} matches</span>
+                      <span>{(lobby.matches?.length || 0)} matches</span>
                       <div className="flex items-center">
                         <Star className="mr-1 h-3 w-3 text-yellow-500" />
                         {lobby.averageRating}

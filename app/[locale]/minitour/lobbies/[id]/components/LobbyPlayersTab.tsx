@@ -4,7 +4,7 @@ import Link from "next/link"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import type { MiniTourLobby } from "@/stores/miniTourLobbyStore"
+import type { MiniTourLobby } from "@/app/stores/miniTourLobbyStore"
 
 interface LobbyPlayersTabProps {
   lobby: MiniTourLobby
