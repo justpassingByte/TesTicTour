@@ -11,7 +11,7 @@ interface UserState {
 
 interface UserActions {
   setCurrentUser: (user: IUser | null) => void;
-  clearUser: () => void;
+  clearUser: () => Promise<void>;
   initializeUser: () => Promise<void>;
 }
 
@@ -21,7 +21,19 @@ export const useUserStore = create<UserState & UserActions>((set) => ({
   error: null,
 
   setCurrentUser: (user) => set({ currentUser: user, isLoading: false, error: null }),
-  clearUser: () => set({ currentUser: null, isLoading: false, error: null }),
+  clearUser: async () => {
+    try {
+      await AuthClientService.logout();
+      set({ currentUser: null, isLoading: false, error: null });
+    } catch (error) {
+      console.error("Error during logout:", error);
+      toast({
+        title: "Logout Failed",
+        description: "There was an error logging out. Please try again.",
+        variant: "destructive",
+      });
+    }
+  },
 
   initializeUser: async () => {
     set({ isLoading: true, error: null });

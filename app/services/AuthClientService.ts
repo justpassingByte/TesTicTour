@@ -56,7 +56,7 @@ export class AuthClientService {
       await api.post('/auth/logout'); // Call to backend to invalidate session/clear HttpOnly cookie
       localStorage.removeItem('authUser'); // Clear client-side stored user data
       useUserStore.getState().clearUser();
-      window.location.href = '/'; // Redirect to home page
+      // window.location.href = '/'; // Removed to prevent forced full page reload
     } catch (err) {
       console.error('Error during logout:', err);
       throw new Error('Error during logout');
