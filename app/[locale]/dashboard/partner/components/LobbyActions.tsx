@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { Edit, Eye, MoreHorizontal, Trash2 } from "lucide-react"
+import { Edit, Eye, MoreHorizontal, Trash2, UserPlus } from "lucide-react"
 
 import { useMiniTourLobbyStore, MiniTourLobby } from "@/app/stores/miniTourLobbyStore"
 import { Button } from "@/components/ui/button"
@@ -14,10 +14,13 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import { AssignPlayersDialog } from "./AssignPlayersDialog"
+import { useState } from "react"
 
 export function LobbyActions({ lobby }: { lobby: MiniTourLobby }) {
   const router = useRouter()
   const { deleteLobby, isProcessingAction } = useMiniTourLobbyStore()
+  const [isAssignPlayersDialogOpen, setIsAssignPlayersDialogOpen] = useState(false)
 
   const handleDelete = async () => {
     if (window.confirm("Are you sure you want to delete this lobby? This action cannot be undone.")) {
@@ -32,24 +35,35 @@ export function LobbyActions({ lobby }: { lobby: MiniTourLobby }) {
   }
 
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="sm" disabled={isProcessingAction}>
-          <MoreHorizontal className="h-4 w-4" />
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="end">
-        <DropdownMenuLabel>Actions</DropdownMenuLabel>
-        <DropdownMenuItem asChild>
-          <Link href={`/dashboard/partner/minitours/${lobby.id}`}>
-            <Edit className="mr-2 h-4 w-4" /> View/Edit
-          </Link>
-        </DropdownMenuItem>
-        <DropdownMenuSeparator />
-        <DropdownMenuItem className="text-destructive" onClick={handleDelete} disabled={isProcessingAction}>
-          <Trash2 className="mr-2 h-4 w-4" /> Delete Lobby
-        </DropdownMenuItem>
-      </DropdownMenuContent>
-    </DropdownMenu>
+    <>
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button variant="ghost" size="sm" disabled={isProcessingAction}>
+            <MoreHorizontal className="h-4 w-4" />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end">
+          <DropdownMenuLabel>Actions</DropdownMenuLabel>
+          <DropdownMenuItem asChild>
+            <Link href={`/dashboard/partner/minitours/${lobby.id}`}>
+              <Edit className="mr-2 h-4 w-4" /> View/Edit
+            </Link>
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={() => setIsAssignPlayersDialogOpen(true)}>
+            <UserPlus className="mr-2 h-4 w-4" /> Assign Players
+          </DropdownMenuItem>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem className="text-destructive" onClick={handleDelete} disabled={isProcessingAction}>
+            <Trash2 className="mr-2 h-4 w-4" /> Delete Lobby
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+
+      <AssignPlayersDialog
+        lobbyId={lobby.id}
+        isOpen={isAssignPlayersDialogOpen}
+        onOpenChange={setIsAssignPlayersDialogOpen}
+      />
+    </>
   )
 } 

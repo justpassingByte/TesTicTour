@@ -34,7 +34,7 @@ export function MainNav({
   const locale = useLocale();
   const t = useTranslations('common');
   const { openModal } = useAuthModalStore()
-  const { user, clearUser } = useUserStore();
+  const { currentUser, clearUser } = useUserStore();
 
   // Debug logs
   console.log("[MainNav] Current locale:", locale);
@@ -50,10 +50,10 @@ export function MainNav({
   // Fetch user data on component mount
   useEffect(() => {
     // Only fetch if user is not already set and not loading
-    if (!user) {
-      useUserStore.getState().fetchUser();
+    if (!currentUser) {
+      useUserStore.getState().initializeUser();
     }
-  }, [user]); // Re-run if user state changes
+  }, [currentUser]); // Re-run if user state changes
 
   const navItems: NavItem[] = [
     {
@@ -81,7 +81,7 @@ export function MainNav({
       label: t("leaderboard"),
       icon: <BarChart3 className="h-5 w-5" />,
     },
-    ...(user ? [
+    ...(currentUser ? [
     {
       href: "/dashboard",
       label: t("Dashboard"),
@@ -134,7 +134,7 @@ export function MainNav({
             {isOpen ? <X /> : <Menu />}
           </Button>
 
-          {user ? (
+          {currentUser ? (
             <Button
               variant="ghost"
               className="text-lg font-bold mr-4"

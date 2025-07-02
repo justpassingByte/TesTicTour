@@ -4,7 +4,7 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Progress } from "@/components/ui/progress"
 import { Coins, Loader2 } from "lucide-react"
-import type { MiniTourLobby } from "@/stores/miniTourLobbyStore"
+import type { MiniTourLobby } from "@/app/stores/miniTourLobbyStore"
 import type { SecondaryAction } from "../hooks/useLobbyActions";
 
 interface LobbyActionCardProps {

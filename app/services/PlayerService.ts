@@ -1,6 +1,7 @@
 import api from '../lib/apiConfig';
 import { IParticipant, IMatchResult, ITournament } from '../types/tournament';
 import { IUser } from '../types/user';
+import { Player } from '../stores/miniTourLobbyStore';
 
 // New PlayerStats interface to match backend
 interface PlayerStats {

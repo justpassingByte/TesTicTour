@@ -6,7 +6,7 @@ import { Star, Coins } from "lucide-react"
 
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent } from "@/components/ui/card"
-import type { MiniTourLobby } from "@/stores/miniTourLobbyStore"
+import type { MiniTourLobby } from "@/app/stores/miniTourLobbyStore"
 
 interface LobbyHeaderProps {
   lobby: MiniTourLobby

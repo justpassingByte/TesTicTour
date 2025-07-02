@@ -2,7 +2,7 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import type { MiniTourLobby } from "@/stores/miniTourLobbyStore"
+import type { MiniTourLobby } from "@/app/stores/miniTourLobbyStore"
 
 interface LobbyQuickStatsCardProps {
   lobby: MiniTourLobby

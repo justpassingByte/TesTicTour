@@ -24,7 +24,7 @@ import {
 
 import { getPartnerData, getPartnerLobbies, getAnalyticsData } from "./lib/data"
 
-import { MiniTourLobby, MiniTourMatch, MiniTourMatchResult, PartnerData, AnalyticsData, Player } from "@/stores/miniTourLobbyStore";
+import { MiniTourLobby, MiniTourMatch, MiniTourMatchResult, PartnerData, AnalyticsData, Player } from "@/app/stores/miniTourLobbyStore";
 
 // Fallback Skeleton Components
 function TabContentSkeleton() {

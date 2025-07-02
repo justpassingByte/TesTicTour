@@ -140,6 +140,7 @@ interface MiniTourLobbyActions {
   createLobby: (formData: FormData, router: any) => Promise<void>;
   updateLobby: (lobbyId: string, formData: FormData, router: any) => Promise<void>;
   deleteLobby: (lobbyId: string, router: any) => Promise<void>;
+  assignPlayerToLobby: (lobbyId: string, userId: string) => Promise<void>;
 }
 
 export const useMiniTourLobbyStore = create<MiniTourLobbyState & MiniTourLobbyActions>((set, get) => ({
@@ -206,7 +207,7 @@ export const useMiniTourLobbyStore = create<MiniTourLobbyState & MiniTourLobbyAc
     try {
       await MiniTourLobbyService.deleteLobby(lobbyId);
       set({ lobby: null });
-      router.push("/dashboard/partner/minitours");
+      router.push("/dashboard/partner");
       toast({
         title: "Thành công",
         description: "Sảnh đã được xóa thành công.",
@@ -214,6 +215,35 @@ export const useMiniTourLobbyStore = create<MiniTourLobbyState & MiniTourLobbyAc
     } catch (error: any) {
       console.error("Failed to delete lobby:", error);
       const errorMessage = error.message || "Không thể xóa sảnh. Vui lòng thử lại.";
+      set({ error: errorMessage });
+      toast({
+        title: "Lỗi",
+        description: errorMessage,
+        variant: "destructive",
+      });
+    } finally {
+      set({ isProcessingAction: false });
+    }
+  },
+
+  assignPlayerToLobby: async (lobbyId: string, userId: string) => {
+    set({ isProcessingAction: true, error: null });
+    try {
+      await MiniTourLobbyService.assignPlayerToLobby(lobbyId, userId);
+      await get().fetchLobby(lobbyId);
+      toast({
+        title: "Thành công",
+        description: "Người chơi đã được gán vào sảnh thành công.",
+      });
+    } catch (error: any) {
+      console.error("Failed to assign player to lobby:", error);
+      console.log("Full Error Object:", JSON.stringify(error, Object.getOwnPropertyNames(error), 2));
+      let errorMessage = "Không thể gán người chơi vào sảnh. Vui lòng thử lại.";
+      if (error.isAxiosError && error.response && error.response.data && error.response.data.message) {
+        errorMessage = error.response.data.message;
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
       set({ error: errorMessage });
       toast({
         title: "Lỗi",

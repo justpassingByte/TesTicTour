@@ -12,7 +12,7 @@ import { useUserStore } from '@/app/stores/userStore';
 export function AuthModal() {
   const { isOpen, view, closeModal, setView } = useAuthModalStore();
   const t = useTranslations('common');
-  const { setUser} = useUserStore();
+  const { setCurrentUser } = useUserStore();
   const [loginIdentifier, setLoginIdentifier] = useState('');
   const [password, setPassword] = useState('');
   const [username, setUsername] = useState('');
@@ -26,15 +26,18 @@ export function AuthModal() {
   const [registerError, setRegisterError] = useState('');
 
   const handleLogin = async () => {
+    console.log("[AuthModal] handleLogin called.");
     setLoginError('');
     try {
+      console.log("[AuthModal] Attempting login with:", { loginIdentifier, password });
       const { user } = await AuthClientService.login({ login: loginIdentifier, password });
-      setUser(user);
-      console.log('Login successful:', user);
+      setCurrentUser(user);
+      console.log('[AuthModal] Login successful, user set:', user);
       closeModal();
-    } catch (error) {
+    } catch (error: any) {
       setLoginError(t('auth.loginError') || 'Đăng nhập thất bại.');
-      console.error('Login failed:', error);
+      console.error('[AuthModal] Login failed with error:', error);
+      console.log("[AuthModal] Full error object from login:", JSON.stringify(error, Object.getOwnPropertyNames(error), 2));
     }
   };
 

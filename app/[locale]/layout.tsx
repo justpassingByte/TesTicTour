@@ -9,6 +9,7 @@ import { MainNav } from "@/components/main-nav";
 import { Footer } from "@/components/footer";
 import { Toaster } from "@/components/ui/toaster";
 import LocaleDebug from './components/LocaleDebug';
+import AuthClientWrapper from './components/AuthClientWrapper';
 
 const fontSans = FontSans({
   subsets: ["latin"],
@@ -81,7 +82,9 @@ export default async function LocaleLayout({
                   Current locale: {locale}
                 </div>
                 <MainNav />
-                <main className="flex-1 min-h-[calc(100vh-theme(spacing.16)-theme(spacing.16))] ">{children}</main>
+                <main className="flex-1 min-h-[calc(100vh-theme(spacing.16)-theme(spacing.16))] ">
+                  <AuthClientWrapper>{children}</AuthClientWrapper>
+                </main>
                 <Footer />
                 {/* <LocaleDebug /> */}
               </div>
