@@ -22,7 +22,7 @@ export function TournamentFormatCard({ tournament }: TournamentFormatCardProps) 
         <div className="flex justify-between">
           <div className="text-muted-foreground">Registration Fee:</div>
           <div className="font-medium">
-            {new Intl.NumberFormat('en-US', { style: 'currency', currency: 'VND' }).format(
+            {new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(
               (tournament.entryFee || 0)
             )}
           </div>
@@ -30,9 +30,9 @@ export function TournamentFormatCard({ tournament }: TournamentFormatCardProps) 
         <div className="flex justify-between">
           <div className="text-muted-foreground">Prize Pool:</div>
           <div className="font-medium">
-            {new Intl.NumberFormat('en-US', { style: 'currency', currency: 'VND' }).format(
+            {new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(
               (tournament.entryFee || 0) *
-              (tournament.actualParticipantsCount || 0) *
+              (tournament.registered || 0) *
               (1 - (tournament.hostFeePercent || 0))
             )}
           </div>
