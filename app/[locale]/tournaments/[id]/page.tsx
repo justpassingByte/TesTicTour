@@ -116,7 +116,11 @@ export default async function TournamentPage({ params }: { params: { id: string 
                   </li>
                   <li className="flex items-center justify-between">
                     <span className="text-muted-foreground flex items-center"><Calendar className="mr-2 h-4 w-4" /> Reg. Deadline:</span>
-                    <span className="font-medium">{format(new Date(tournament.endTime || ""), "yyyy-MM-dd")}</span>
+                    <span className="font-medium">
+                      {tournament.endTime && !isNaN(new Date(tournament.endTime).getTime())
+                        ? format(new Date(tournament.endTime), "yyyy-MM-dd")
+                        : "N/A"}
+                    </span>
                   </li>
                   <li className="flex items-center justify-between">
                     <span className="text-muted-foreground flex items-center"><DollarSign className="mr-2 h-4 w-4" /> Reg. Fee:</span>

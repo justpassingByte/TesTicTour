@@ -12,11 +12,13 @@ interface TournamentScheduleCardProps {
 export function TournamentScheduleCard({ tournament }: TournamentScheduleCardProps) {
   const startDate = new Date(tournament.startTime)
   const endDate = tournament.endTime ? new Date(tournament.endTime) : null
-  const registrationDeadlineDate = new Date(tournament.endTime || "")
+  const registrationDeadlineDate = tournament.endTime && !isNaN(new Date(tournament.endTime).getTime()) 
+    ? new Date(tournament.endTime) 
+    : null
   
   const today = new Date()
   const daysUntilStart = differenceInDays(startDate, today)
-  const daysUntilRegistrationDeadline = differenceInDays(registrationDeadlineDate, today)
+  const daysUntilRegistrationDeadline = registrationDeadlineDate ? differenceInDays(registrationDeadlineDate, today) : 0
   
   return (
     <Card className="bg-card/60 dark:bg-card/40 backdrop-blur-lg border border-white/20 transition-all duration-300 hover:shadow-lg hover:shadow-primary/10 hover:-translate-y-1">
@@ -30,11 +32,17 @@ export function TournamentScheduleCard({ tournament }: TournamentScheduleCardPro
         <div className="flex justify-between">
           <div className="text-muted-foreground">Registration Deadline:</div>
           <div className="font-medium">
-            {format(registrationDeadlineDate, "MMM d, yyyy 'at' h:mm a")}
-            {daysUntilRegistrationDeadline > 0 && (
-              <span className="text-xs ml-1 text-muted-foreground">
-                (in {daysUntilRegistrationDeadline} {daysUntilRegistrationDeadline === 1 ? 'day' : 'days'})
-              </span>
+            {registrationDeadlineDate ? (
+              <>
+                {format(registrationDeadlineDate, "MMM d, yyyy 'at' h:mm a")}
+                {daysUntilRegistrationDeadline > 0 && (
+                  <span className="text-xs ml-1 text-muted-foreground">
+                    (in {daysUntilRegistrationDeadline} {daysUntilRegistrationDeadline === 1 ? 'day' : 'days'})
+                  </span>
+                )}
+              </>
+            ) : (
+              "N/A"
             )}
           </div>
         </div>
