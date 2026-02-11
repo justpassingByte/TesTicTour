@@ -6,7 +6,7 @@ interface UserState {
   user: IUser | null;
   loading: boolean;
   setUser: (user: IUser | null) => void;
-  clearUser: () => void;
+  clearUser: () => Promise<void>;
   fetchUser: () => Promise<void>;
 }
 
@@ -30,8 +30,16 @@ export const useUserStore = create<UserState>((set, get) => {
         }
       }
     },
-    clearUser: () => {
+    clearUser: async () => {
       console.log("UserStore: Clearing user");
+      try {
+        // Call logout API to clear server-side cookie
+        await api.post('/auth/logout');
+      } catch (error) {
+        console.error("UserStore: Error calling logout API:", error);
+        // Continue with local cleanup even if API call fails
+      }
+      
       set({ user: null, loading: false });
       if (typeof window !== 'undefined') {
         localStorage.removeItem('authUser');

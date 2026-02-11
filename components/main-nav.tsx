@@ -138,7 +138,7 @@ export function MainNav({
             <Button
               variant="ghost"
               className="text-lg font-bold mr-4"
-              onClick={clearUser}
+              onClick={async () => await clearUser()}
             >
               {t("header.logout")}
             </Button>

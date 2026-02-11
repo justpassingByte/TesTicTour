@@ -17,9 +17,9 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
       // User is not authenticated and loading is complete
       console.log('[DashboardLayout Client] No user found and loading complete, redirecting to login.');
       router.push('/?auth=login');
-    } else if (user && user.role !== 'admin') {
-      // User is authenticated but does not have admin role
-      console.log('[DashboardLayout Client] User is not admin, redirecting to home.');
+    } else if (user && !['admin', 'partner'].includes(user.role)) {
+      // User is authenticated but does not have admin or partner role
+      console.log('[DashboardLayout Client] User is not admin or partner, redirecting to home.');
       router.push('/'); // Or a /forbidden page
     }
   }, [user, loading, router]);

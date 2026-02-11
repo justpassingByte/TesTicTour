@@ -56,7 +56,7 @@ export function AuthModal() {
 
   return (
     <Dialog open={isOpen} onOpenChange={closeModal}>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="sm:max-w-[425px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>{t("auth.title")}</DialogTitle>
           <DialogDescription>
@@ -93,7 +93,7 @@ export function AuthModal() {
               {t("auth.loginButton")}
             </Button>
           </TabsContent>
-          <TabsContent value="register" className="space-y-4 pt-4">
+          <TabsContent value="register" className="space-y-3 pt-4 max-h-[70vh] overflow-y-auto pr-2">
             <div className="grid gap-2">
               <Label htmlFor="username-register">{t("auth.username")}</Label>
               <Input
@@ -132,48 +132,55 @@ export function AuthModal() {
                 onChange={(e) => setConfirmPassword(e.target.value)}
               />
             </div>
-            <div className="grid gap-2">
-              <Label htmlFor="game-name-register">{t("auth.gameName")}</Label>
-              <Input
-                id="game-name-register"
-                type="text"
-                placeholder="Your in-game name"
-                value={gameName}
-                onChange={(e) => setGameName(e.target.value)}
-              />
-            </div>
-            <div className="grid gap-2">
-              <Label htmlFor="tag-name-register">{t("auth.tagName")}</Label>
-              <Input
-                id="tag-name-register"
-                type="text"
-                placeholder="Your in-game tag (e.g., EUW, VN2)"
-                value={tagName}
-                onChange={(e) => setTagName(e.target.value)}
-              />
+            <div className="grid grid-cols-2 gap-2">
+              <div className="grid gap-2">
+                <Label htmlFor="game-name-register">{t("auth.gameName")}</Label>
+                <Input
+                  id="game-name-register"
+                  type="text"
+                  placeholder="Game name"
+                  value={gameName}
+                  onChange={(e) => setGameName(e.target.value)}
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="tag-name-register">{t("auth.tagName")}</Label>
+                <Input
+                  id="tag-name-register"
+                  type="text"
+                  placeholder="Tag"
+                  value={tagName}
+                  onChange={(e) => setTagName(e.target.value)}
+                />
+              </div>
             </div>
             <div className="grid gap-2">
               <Label htmlFor="region-register">{t("auth.region")}</Label>
-              <Input
+              <select
                 id="region-register"
-                type="text"
-                placeholder="e.g., SEA, NA, EU, ASIA"
+                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                 value={region}
                 onChange={(e) => setRegion(e.target.value)}
-              />
+              >
+                <option value="sea">SEA</option>
+                <option value="na">NA</option>
+                <option value="eu">EU</option>
+                <option value="asia">ASIA</option>
+                <option value="kr">KR</option>
+              </select>
             </div>
             <div className="grid gap-2">
               <Label htmlFor="referrer-register">{t("auth.referrer")}</Label>
               <Input
                 id="referrer-register"
                 type="text"
-                placeholder="Referral code or username"
+                placeholder="Referral code (optional)"
                 value={referrer}
                 onChange={(e) => setReferrer(e.target.value)}
               />
             </div>
             {registerError && <div className="text-red-500 text-sm">{registerError}</div>}
-            <Button type="submit" className="w-full" onClick={handleRegister}>
+            <Button type="submit" className="w-full mt-4" onClick={handleRegister}>
               {t("auth.registerButton")}
             </Button>
           </TabsContent>
@@ -181,4 +188,4 @@ export function AuthModal() {
       </DialogContent>
     </Dialog>
   );
-} 
+}
