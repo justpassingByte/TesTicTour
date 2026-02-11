@@ -73,17 +73,15 @@ export interface MiniTourLobby {
 }
 
 export interface PartnerData {
-  partner: { name: string; logo: string; tier: string; verified: boolean; rating: number }
-  metrics: {
-    monthlyRevenue: number
-    totalRevenue: number
-    totalPlayers: number
-    activeLobbies: number
-    totalLobbies: number
-    totalMatches: number
-    revenueShare: number
-    balance: number
-  }
+  totalPlayers: number
+  totalRevenue: number
+  activeLobbies: number
+  totalLobbies: number
+  monthlyRevenue: number
+  balance: number
+  totalMatches: number
+  revenueShare: number
+  subscription: any;
 }
 
 export interface AnalyticsData {
