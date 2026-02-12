@@ -91,7 +91,7 @@ export function DashboardSidebar({ userRole }: DashboardSidebarProps) {
         })}
       </nav>
       <div className="mt-auto">
-        <Button variant="ghost" className="w-full justify-start" onClick={clearUser}>
+        <Button variant="ghost" className="w-full justify-start" onClick={async () => await clearUser()}>
           <DoorClosed className="mr-3 h-5 w-5" />
           {t("dashboard.logout") || "Logout"}
         </Button>

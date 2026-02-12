@@ -13,14 +13,16 @@ interface UserActions {
   setCurrentUser: (user: IUser | null) => void;
   clearUser: () => Promise<void>;
   initializeUser: () => Promise<void>;
+  fetchUser: () => Promise<void>;
 }
 
-export const useUserStore = create<UserState & UserActions>((set) => ({
+export const useUserStore = create<UserState & UserActions>((set, get) => ({
   currentUser: null,
-  isLoading: true, // Set to true initially to indicate loading on app start
+  isLoading: true,
   error: null,
 
   setCurrentUser: (user) => set({ currentUser: user, isLoading: false, error: null }),
+
   clearUser: async () => {
     try {
       await AuthClientService.logout();
@@ -35,6 +37,11 @@ export const useUserStore = create<UserState & UserActions>((set) => ({
     }
   },
 
+  fetchUser: async () => {
+    // Adapter for initializeUser
+    await get().initializeUser();
+  },
+
   initializeUser: async () => {
     set({ isLoading: true, error: null });
     try {
@@ -43,11 +50,7 @@ export const useUserStore = create<UserState & UserActions>((set) => ({
     } catch (err: any) {
       console.error("Failed to initialize user:", err);
       set({ currentUser: null, isLoading: false, error: err.message || "Failed to load user data." });
-      toast({
-        title: "Error",
-        description: "Failed to load user session. Please try logging in again.",
-        variant: "destructive",
-      });
+      // Don't show toast on initial load failure as it might just mean no session
     }
   },
-})); 
+}));

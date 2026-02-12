@@ -29,7 +29,7 @@ import { useState, useEffect } from "react"
 import { Skeleton } from "@/components/ui/skeleton"
 import Link from "next/link"
 import { Input } from "@/components/ui/input"
-import { 
+import {
   Select,
   SelectContent,
   SelectItem,
@@ -43,18 +43,6 @@ import { PartnerHeader, KeyMetrics, OverviewTab, LobbiesTab, AnalyticsTab, Reven
 // Data Fetching Functions
 import { usePlayerStore } from "@/app/stores/playerStore"
 
-// Removed getPlayersData as it will be handled by the store
-// export const getPlayersData = async (referrer: string): Promise<Player[]> => {
-//   // console.log("Attempting to fetch players for referrer:", referrer);
-//   try {
-//     const response = await api.get(`/admin/users/by-referrer?referrer=${referrer}`)
-//     return response.data.data
-//   } catch (error) {
-//     console.error("Failed to fetch players data:", error)
-//     return []
-//   }
-// }
-
 // --- CLIENT COMPONENTS ---
 
 export function PlayerTab({ referrer }: { referrer: string }) {
@@ -65,11 +53,13 @@ export function PlayerTab({ referrer }: { referrer: string }) {
 
   useEffect(() => {
     // Fetch all players when component mounts or referrer changes
-    fetchAllPlayers(undefined, referrer)
+    if (referrer) {
+      fetchAllPlayers(undefined, referrer)
+    }
   }, [fetchAllPlayers, referrer])
 
   if (isLoading) {
-  return (
+    return (
       <div className="space-y-4">
         <Skeleton className="h-10 w-48" />
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
@@ -87,11 +77,11 @@ export function PlayerTab({ referrer }: { referrer: string }) {
 
   const filteredPlayers = players.filter(player => {
     const matchesSearch = player.username.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                          player.email.toLowerCase().includes(searchTerm.toLowerCase())
+      player.email.toLowerCase().includes(searchTerm.toLowerCase())
 
-    const matchesFilter = filterStatus === 'all' || 
-                          (filterStatus === 'active' && player.isActive) ||
-                          (filterStatus === 'inactive' && !player.isActive)
+    const matchesFilter = filterStatus === 'all' ||
+      (filterStatus === 'active' && player.isActive) ||
+      (filterStatus === 'inactive' && !player.isActive)
     return matchesSearch && matchesFilter
   })
 
@@ -254,43 +244,43 @@ export function MiniTournamentsTab() {
   return (
     <div className="space-y-4">
       <h2 className="text-2xl font-bold">Mini-Tournaments</h2>
-          <Table>
-            <TableHeader>
-              <TableRow>
+      <Table>
+        <TableHeader>
+          <TableRow>
             <TableHead>Tournament Name</TableHead>
             <TableHead>Status</TableHead>
             <TableHead>Players</TableHead>
             <TableHead>Prize Pool</TableHead>
             <TableHead>Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
           {tournaments.map((tournament) => (
             <TableRow key={tournament.id}>
               <TableCell className="font-medium">{tournament.name}</TableCell>
               <TableCell>{tournament.status}</TableCell>
               <TableCell>{tournament.currentPlayers}/{tournament.maxPlayers}</TableCell>
               <TableCell>${tournament.prizePool.toLocaleString()}</TableCell>
-                  <TableCell>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
+              <TableCell>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
                     <Button variant="ghost" className="h-8 w-8 p-0">
                       <span className="sr-only">Open menu</span>
-                          <MoreHorizontal className="h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                      <MoreHorizontal className="h-4 w-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuLabel>Actions</DropdownMenuLabel>
                     <DropdownMenuItem>View Tournament</DropdownMenuItem>
                     <DropdownMenuItem>Edit Tournament</DropdownMenuItem>
                     <DropdownMenuItem>Delete Tournament</DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
     </div>
   );
 }

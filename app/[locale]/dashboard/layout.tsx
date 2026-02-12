@@ -9,18 +9,25 @@ interface DashboardLayoutProps {
 }
 
 export default function DashboardLayout({ children }: DashboardLayoutProps) {
-  const { user, loading, fetchUser } = useUserStore();
+  const { currentUser: user, isLoading: loading, fetchUser } = useUserStore();
   const router = useRouter();
+
+  useEffect(() => {
+    // Initial fetch if not already loaded
+    if (user === null && loading) {
+      fetchUser();
+    }
+  }, [user, loading, fetchUser]);
 
   useEffect(() => {
     if (user === null && !loading) {
       // User is not authenticated and loading is complete
       console.log('[DashboardLayout Client] No user found and loading complete, redirecting to login.');
       router.push('/?auth=login');
-    } else if (user && user.role !== 'admin' && user.role !== 'partner' && user.role !== 'user') {
-      // User is authenticated but does not have admin, partner, or user role
-      console.log('[DashboardLayout Client] User is not admin, partner, or user, redirecting to home.');
-      router.push('/'); // Or a /forbidden page
+    } else if (user && !['admin', 'partner', 'user'].includes(user.role)) {
+      // User is authenticated but does not have a valid dashboard role
+      console.log('[DashboardLayout Client] User role is not authorized for dashboard:', user.role);
+      router.push('/');
     }
   }, [user, loading, router]);
 
@@ -30,7 +37,6 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
   }
 
   // If user is null but not loading, it means they were redirected, so we don't render children yet
-  // This prevents flickering if the redirect happens immediately
   if (user === null) {
     return null;
   }
@@ -42,4 +48,4 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
       </main>
     </div>
   );
-} 
+}

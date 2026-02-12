@@ -17,7 +17,7 @@ import {
 import { AssignPlayersDialog } from "./AssignPlayersDialog"
 import { useState } from "react"
 
-export function LobbyActions({ lobby }: { lobby: MiniTourLobby }) {
+export function LobbyActions({ lobby, onLobbiesUpdate }: { lobby: MiniTourLobby; onLobbiesUpdate?: (lobbies: MiniTourLobby[]) => void }) {
   const router = useRouter()
   const { deleteLobby, isProcessingAction } = useMiniTourLobbyStore()
   const [isAssignPlayersDialogOpen, setIsAssignPlayersDialogOpen] = useState(false)
@@ -25,7 +25,7 @@ export function LobbyActions({ lobby }: { lobby: MiniTourLobby }) {
   const handleDelete = async () => {
     if (window.confirm("Are you sure you want to delete this lobby? This action cannot be undone.")) {
       try {
-        await deleteLobby(lobby.id, router)
+        await deleteLobby(lobby.id, router, onLobbiesUpdate)
         // Success toast can be shown here or handled globally if the store does it
       } catch (error) {
         // Error toast is likely handled by the store, but you could add one here as a fallback

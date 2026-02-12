@@ -33,33 +33,25 @@ import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Switch } from "@/components/ui/switch"
+import api from "@/app/lib/apiConfig"
+import React, { FormEvent, useState } from 'react';
 
 // --- ASYNC COMPONENTS ---
 
 export async function PartnerHeader({ partnerData }: { partnerData: PartnerData | null }) {
   if (!partnerData) return null
-  const { partner } = partnerData
   return (
     <div className="flex items-center space-x-4">
       <div className="relative">
         <Avatar className="h-16 w-16">
-          <AvatarImage src={partner.logo || "/placeholder.svg"} alt={partner.name} />
-          <AvatarFallback className="text-lg">{partner.name.charAt(0)}</AvatarFallback>
+          <AvatarImage src="/placeholder.svg" alt="Partner" />
+          <AvatarFallback className="text-lg">P</AvatarFallback>
         </Avatar>
-        {partner.verified && (
-          <div className="absolute -right-1 -top-1 flex h-6 w-6 items-center justify-center rounded-full bg-primary">
-            <Crown className="h-3 w-3 text-white" />
-          </div>
-        )}
       </div>
       <div>
-        <h1 className="text-4xl font-bold tracking-tight">{partner.name}</h1>
+        <h1 className="text-4xl font-bold tracking-tight">Partner Dashboard</h1>
         <div className="flex items-center space-x-2">
-          <Badge className="bg-primary/20 text-primary">{partner.tier} Partner</Badge>
-          <div className="flex items-center">
-            <Star className="mr-1 h-4 w-4 text-yellow-500" />
-            <span className="text-sm font-medium">{partner.rating}</span>
-          </div>
+          <Badge className="bg-primary/20 text-primary">Partner</Badge>
         </div>
       </div>
     </div>
@@ -68,7 +60,6 @@ export async function PartnerHeader({ partnerData }: { partnerData: PartnerData 
 
 export async function KeyMetrics({ partnerData }: { partnerData: PartnerData | null }) {
   if (!partnerData) return <div>Failed to load partner metrics. Please check the API.</div>
-  const { metrics } = partnerData
   return (
     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
       <Card className="border-primary/50 bg-primary/5">
@@ -76,7 +67,7 @@ export async function KeyMetrics({ partnerData }: { partnerData: PartnerData | n
           <div className="flex items-center">
             <DollarSign className="mr-3 h-8 w-8 text-primary" />
             <div>
-              <p className="text-2xl font-bold">${metrics.monthlyRevenue.toLocaleString()}</p>
+              <p className="text-2xl font-bold">${partnerData.monthlyRevenue?.toLocaleString() || 0}</p>
               <p className="text-xs text-muted-foreground">Monthly Revenue</p>
             </div>
           </div>
@@ -87,7 +78,7 @@ export async function KeyMetrics({ partnerData }: { partnerData: PartnerData | n
           <div className="flex items-center">
             <Coins className="mr-3 h-8 w-8 text-primary" />
             <div>
-              <p className="text-2xl font-bold">${metrics.balance.toLocaleString()}</p>
+              <p className="text-2xl font-bold">${partnerData.balance?.toLocaleString() || 0}</p>
               <p className="text-xs text-muted-foreground">Partner Balance</p>
             </div>
           </div>
@@ -98,7 +89,7 @@ export async function KeyMetrics({ partnerData }: { partnerData: PartnerData | n
           <div className="flex items-center">
             <Users className="mr-3 h-8 w-8 text-primary" />
             <div>
-              <p className="text-2xl font-bold">{metrics.totalPlayers.toLocaleString()}</p>
+              <p className="text-2xl font-bold">{partnerData.totalPlayers?.toLocaleString() || 0}</p>
               <p className="text-xs text-muted-foreground">Total Players</p>
             </div>
           </div>
@@ -109,7 +100,7 @@ export async function KeyMetrics({ partnerData }: { partnerData: PartnerData | n
           <div className="flex items-center">
             <Trophy className="mr-3 h-8 w-8 text-primary" />
             <div>
-              <p className="text-2xl font-bold">{metrics.totalLobbies.toLocaleString()}</p>
+              <p className="text-2xl font-bold">{partnerData.totalLobbies?.toLocaleString() || 0}</p>
               <p className="text-xs text-muted-foreground">Total Lobbies</p>
             </div>
           </div>
@@ -122,7 +113,6 @@ export async function KeyMetrics({ partnerData }: { partnerData: PartnerData | n
 export async function OverviewTab({ partnerData, lobbies }: { partnerData: PartnerData | null; lobbies: MiniTourLobby[] }) {
   if (!partnerData) return <p>Could not load overview.</p>
 
-  const { partner, metrics } = partnerData
   return (
     <div className="space-y-4">
       <div className="grid gap-4 md:grid-cols-2">
@@ -135,25 +125,25 @@ export async function OverviewTab({ partnerData, lobbies }: { partnerData: Partn
             <div className="space-y-2">
               <div className="flex justify-between">
                 <span className="text-sm">Player Satisfaction</span>
-                <span className="text-sm font-medium">{partner.rating}/5.0</span>
+                <span className="text-sm font-medium">N/A</span>
               </div>
-              <Progress value={partner.rating * 20} />
+              <Progress value={0} />
             </div>
             <div className="space-y-2">
               <div className="flex justify-between">
                 <span className="text-sm">Lobby Utilization</span>
                 <span className="text-sm font-medium">
-                  {metrics.totalLobbies > 0 ? Math.round((metrics.activeLobbies / metrics.totalLobbies) * 100) : 0}%
+                  {(partnerData.totalLobbies || 0) > 0 ? Math.round(((partnerData.activeLobbies || 0) / (partnerData.totalLobbies || 0)) * 100) : 0}%
                 </span>
               </div>
-              <Progress value={metrics.totalLobbies > 0 ? (metrics.activeLobbies / metrics.totalLobbies) * 100 : 0} />
+              <Progress value={(partnerData.totalLobbies || 0) > 0 ? ((partnerData.activeLobbies || 0) / (partnerData.totalLobbies || 0)) * 100 : 0} />
             </div>
             <div className="space-y-2">
               <div className="flex justify-between">
                 <span className="text-sm">Revenue Share</span>
-                <span className="text-sm font-medium">{metrics.revenueShare}%</span>
+                <span className="text-sm font-medium">{partnerData.revenueShare || 30}%</span>
               </div>
-              <Progress value={metrics.revenueShare} />
+              <Progress value={partnerData.revenueShare || 30} />
             </div>
           </CardContent>
         </Card>
@@ -173,14 +163,14 @@ export async function OverviewTab({ partnerData, lobbies }: { partnerData: Partn
                 <BarChart3 className="mr-2 h-4 w-4" /> View Detailed Analytics
               </Button>
             </Link>
-            <Link href="/dashboard/partner/players">
-              <Button variant="outline" className="w-full justify-start">
-                <Users className="mr-2 h-4 w-4" /> Manage Players
-              </Button>
-            </Link>
             <Link href="/dashboard/partner/settings">
               <Button variant="outline" className="w-full justify-start">
                 <Settings className="mr-2 h-4 w-4" /> Partner Settings
+              </Button>
+            </Link>
+            <Link href="/dashboard/partner?tab=team">
+              <Button variant="outline" className="w-full justify-start">
+                <Users className="mr-2 h-4 w-4" /> View Team
               </Button>
             </Link>
           </CardContent>
@@ -228,7 +218,7 @@ export async function OverviewTab({ partnerData, lobbies }: { partnerData: Partn
   );
 }
 
-export async function LobbiesTab({ lobbies }: { lobbies: MiniTourLobby[] }) {
+export async function LobbiesTab({ lobbies, onLobbiesUpdate }: { lobbies: MiniTourLobby[]; onLobbiesUpdate?: (lobbies: MiniTourLobby[]) => void }) {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
@@ -263,10 +253,9 @@ export async function LobbiesTab({ lobbies }: { lobbies: MiniTourLobby[] }) {
                       className={`
                         ${lobby.status === "WAITING" ? "bg-green-500/20 text-green-500" : ""}
                         ${lobby.status === "IN_PROGRESS" ? "bg-yellow-500/20 text-yellow-500" : ""}
-                        ${
-                          lobby.status === "COMPLETED" || lobby.status === "CANCELLED"
-                            ? "bg-red-500/20 text-red-500"
-                            : ""
+                        ${lobby.status === "COMPLETED" || lobby.status === "CANCELLED"
+                          ? "bg-red-500/20 text-red-500"
+                          : ""
                         }
                       `}
                     >
@@ -295,7 +284,7 @@ export async function LobbiesTab({ lobbies }: { lobbies: MiniTourLobby[] }) {
                     </div>
                   </TableCell>
                   <TableCell className="text-right">
-                    <LobbyActions lobby={lobby} />
+                    <LobbyActions lobby={lobby} onLobbiesUpdate={onLobbiesUpdate} />
                   </TableCell>
                 </TableRow>
               ))}
@@ -374,10 +363,10 @@ export async function AnalyticsTab({ analyticsData }: { analyticsData: Analytics
             <div className="flex items-center">
               <Star className="mr-3 h-8 w-8 text-yellow-500" />
               <div>
-                <p className="text-2xl font-bold">{performance.averageRating.value.toFixed(1)}</p>
+                <p className="text-2xl font-bold">{performance.averageRating.value?.toFixed(1) || '0.0'}</p>
                 <p className="text-xs text-muted-foreground">Average Rating</p>
                 <p className={`text-sm ${performance.averageRating.change >= 0 ? "text-green-500" : "text-red-500"}`}>
-                  {performance.averageRating.change >= 0 ? "+" : ""}{performance.averageRating.change.toFixed(1)} vs last month
+                  {performance.averageRating.change >= 0 ? "+" : ""}{performance.averageRating.change?.toFixed(1) || '0.0'} vs last month
                 </p>
               </div>
             </div>
@@ -390,7 +379,11 @@ export async function AnalyticsTab({ analyticsData }: { analyticsData: Analytics
 
 export async function RevenueTab({ partnerData, lobbies }: { partnerData: PartnerData | null; lobbies: MiniTourLobby[] }) {
   if (!partnerData) return <p>Could not load revenue data.</p>
-  const { metrics } = partnerData
+
+  // Calculate additional revenue metrics
+  const completedLobbies = lobbies.filter(l => l.status === 'COMPLETED')
+  const totalEntryFees = lobbies.reduce((sum, lobby) => sum + (lobby.entryFee || 0), 0)
+  const averagePrizePool = lobbies.length > 0 ? Math.floor(lobbies.reduce((sum, lobby) => sum + (lobby.prizePool || 0), 0) / lobbies.length) : 0
 
   return (
     <div className="space-y-4">
@@ -400,8 +393,9 @@ export async function RevenueTab({ partnerData, lobbies }: { partnerData: Partne
             <div className="flex items-center">
               <DollarSign className="mr-3 h-8 w-8 text-primary" />
               <div>
-                <p className="text-2xl font-bold">${metrics.totalRevenue.toLocaleString()}</p>
+                <p className="text-2xl font-bold">${partnerData.totalRevenue?.toLocaleString() || 0}</p>
                 <p className="text-xs text-muted-foreground">Total Revenue</p>
+                <p className="text-xs text-green-600">30% of prize pools</p>
               </div>
             </div>
           </CardContent>
@@ -411,8 +405,9 @@ export async function RevenueTab({ partnerData, lobbies }: { partnerData: Partne
             <div className="flex items-center">
               <Coins className="mr-3 h-8 w-8 text-primary" />
               <div>
-                <p className="text-2xl font-bold">${metrics.balance.toLocaleString()}</p>
+                <p className="text-2xl font-bold">${partnerData.balance?.toLocaleString() || 0}</p>
                 <p className="text-xs text-muted-foreground">Current Balance</p>
+                <p className="text-xs text-blue-600">Available for payout</p>
               </div>
             </div>
           </CardContent>
@@ -422,8 +417,9 @@ export async function RevenueTab({ partnerData, lobbies }: { partnerData: Partne
             <div className="flex items-center">
               <TrendingUp className="mr-3 h-8 w-8 text-primary" />
               <div>
-                <p className="text-2xl font-bold">{metrics.revenueShare}%</p>
-                <p className="text-xs text-muted-foreground">Your Revenue Share</p>
+                <p className="text-2xl font-bold">${partnerData.monthlyRevenue?.toLocaleString() || 0}</p>
+                <p className="text-xs text-muted-foreground">Monthly Revenue</p>
+                <p className="text-xs text-orange-600">Est. monthly earnings</p>
               </div>
             </div>
           </CardContent>
@@ -433,9 +429,62 @@ export async function RevenueTab({ partnerData, lobbies }: { partnerData: Partne
             <div className="flex items-center">
               <Trophy className="mr-3 h-8 w-8 text-primary" />
               <div>
-                <p className="text-2xl font-bold">{metrics.totalMatches.toLocaleString()}</p>
+                <p className="text-2xl font-bold">{partnerData.totalMatches?.toLocaleString() || 0}</p>
                 <p className="text-xs text-muted-foreground">Matches Played</p>
+                <p className="text-xs text-purple-600">From completed lobbies</p>
               </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      <div className="grid gap-4 md:grid-cols-2">
+        <Card>
+          <CardHeader>
+            <CardTitle>Revenue Breakdown</CardTitle>
+            <CardDescription>How your revenue is calculated</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="flex justify-between">
+              <span className="text-sm">Total Prize Pools</span>
+              <span className="text-sm font-medium">${lobbies.reduce((sum, lobby) => sum + (lobby.prizePool || 0), 0).toLocaleString()}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-sm">Your Revenue Share</span>
+              <span className="text-sm font-medium">{partnerData.revenueShare || 30}%</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-sm">Total Revenue Earned</span>
+              <span className="text-sm font-bold text-green-600">${partnerData.totalRevenue?.toLocaleString() || 0}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-sm">Monthly Estimate</span>
+              <span className="text-sm font-bold text-blue-600">${partnerData.monthlyRevenue?.toLocaleString() || 0}</span>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Lobby Performance</CardTitle>
+            <CardDescription>Your lobby statistics</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="flex justify-between">
+              <span className="text-sm">Total Lobbies</span>
+              <span className="text-sm font-medium">{partnerData.totalLobbies || 0}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-sm">Active Lobbies</span>
+              <span className="text-sm font-medium text-green-600">{partnerData.activeLobbies || 0}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-sm">Completed Lobbies</span>
+              <span className="text-sm font-medium text-blue-600">{completedLobbies.length}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-sm">Average Prize Pool</span>
+              <span className="text-sm font-medium">${averagePrizePool.toLocaleString()}</span>
             </div>
           </CardContent>
         </Card>
@@ -443,28 +492,37 @@ export async function RevenueTab({ partnerData, lobbies }: { partnerData: Partne
 
       <Card>
         <CardHeader>
-          <CardTitle>Revenue Breakdown by Lobby</CardTitle>
-          <CardDescription>Performance of each lobby</CardDescription>
+          <CardTitle>Revenue by Lobby</CardTitle>
+          <CardDescription>Detailed breakdown of each lobby's performance</CardDescription>
         </CardHeader>
         <CardContent>
           <Table>
             <TableHeader>
               <TableRow>
                 <TableHead>Lobby Name</TableHead>
-                <TableHead>Total Players</TableHead>
-                <TableHead>Total Revenue</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead>Prize Pool</TableHead>
                 <TableHead>Your Share</TableHead>
+                <TableHead>Revenue</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {lobbies.map((lobby) => (
-                <TableRow key={lobby.id}>
-                  <TableCell className="font-medium">{lobby.name}</TableCell>
-                  <TableCell>{lobby.currentPlayers}/{lobby.maxPlayers}</TableCell>
-                  <TableCell>${lobby.prizePool.toLocaleString()}</TableCell>
-                  <TableCell>${((lobby.prizePool * metrics.revenueShare) / 100).toLocaleString()}</TableCell>
-                </TableRow>
-              ))}
+              {lobbies.map((lobby) => {
+                const lobbyRevenue = Math.floor((lobby.prizePool || 0) * 0.3)
+                return (
+                  <TableRow key={lobby.id}>
+                    <TableCell className="font-medium">{lobby.name}</TableCell>
+                    <TableCell>
+                      <Badge variant={lobby.status === 'COMPLETED' ? 'default' : 'secondary'}>
+                        {lobby.status}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>${(lobby.prizePool || 0).toLocaleString()}</TableCell>
+                    <TableCell>30%</TableCell>
+                    <TableCell className="font-bold text-green-600">${lobbyRevenue.toLocaleString()}</TableCell>
+                  </TableRow>
+                )
+              })}
             </TableBody>
           </Table>
         </CardContent>
@@ -473,24 +531,49 @@ export async function RevenueTab({ partnerData, lobbies }: { partnerData: Partne
   );
 }
 
-export async function SettingsTab() {
+export function SettingsTab() {
   // Mock data that would normally come from an API
-  const partnerSettings = {
+  const [partnerSettings, setPartnerSettings] = useState({
     partnerName: "TesTicTour Partner",
     partnerLogo: "/placeholder.svg",
     contactEmail: "partner@example.com",
     payoutMethod: "Bank Transfer",
     autoPayout: true,
+    riotApiKey: "",
+    usePersonalRiotApi: false,
+    partnerRevenueShare: 30, // Default 30% revenue share
     notifications: {
       email: true,
       sms: false,
     },
+  });
+
+  const handleSaveSettings = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const formData = new FormData(e.currentTarget);
+    const riotApiKey = formData.get('riotApiKey') as string;
+    const usePersonalRiotApi = formData.get('usePersonalRiotApi') === 'on';
+
+    try {
+      const response = await api.put('/partner/settings', {
+        riotApiKey,
+        usePersonalRiotApi,
+      });
+
+      if (response.status === 200) {
+        console.log('Settings saved successfully');
+      } else {
+        console.error('Failed to save settings');
+      }
+    } catch (error) {
+      console.error('Error saving settings:', error);
+    }
   };
 
   return (
     <div className="space-y-6">
       <h2 className="text-2xl font-bold">Partner Settings</h2>
-      <form className="space-y-6">
+      <form onSubmit={handleSaveSettings} className="space-y-6">
         <Card>
           <CardHeader><CardTitle>General Information</CardTitle></CardHeader>
           <CardContent className="space-y-4">
@@ -527,11 +610,54 @@ export async function SettingsTab() {
         </Card>
 
         <Card>
+          <CardHeader><CardTitle>API Settings</CardTitle></CardHeader>
+          <CardContent className="space-y-4">
+            <div>
+              <Label htmlFor="riotApiKey">Riot API Key</Label>
+              <Input
+                id="riotApiKey"
+                name="usePersonalRiotApi"
+                defaultChecked={partnerSettings.usePersonalRiotApi}
+              />
+              <div className="flex items-center space-x-2">
+                <Switch
+                  id="usePersonalRiotApi"
+                  name="usePersonalRiotApi"
+                  defaultChecked={partnerSettings.usePersonalRiotApi}
+                />
+                <Label htmlFor="usePersonalRiotApi">Use Personal Riot API Key</Label>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader><CardTitle>Revenue Settings</CardTitle></CardHeader>
+          <CardContent className="space-y-4">
+            <div>
+              <Label htmlFor="partnerRevenueShare">Partner Revenue Share (%)</Label>
+              <Input
+                id="partnerRevenueShare"
+                type="number"
+                min="0"
+                step="1"
+                defaultValue={partnerSettings.partnerRevenueShare}
+                className="w-full"
+              />
+              <p className="text-sm text-muted-foreground mt-1">
+                Set the percentage of entry fees you receive from each lobby. Default is 30%.
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
           <CardHeader><CardTitle>Notification Preferences</CardTitle></CardHeader>
           <CardContent className="space-y-4">
             <div className="flex items-center space-x-2">
               <Switch
                 id="emailNotifications"
+                name="emailNotifications"
                 defaultChecked={partnerSettings.notifications.email}
               />
               <Label htmlFor="emailNotifications">Email Notifications</Label>
@@ -550,4 +676,4 @@ export async function SettingsTab() {
       </form>
     </div>
   );
-} 
+}

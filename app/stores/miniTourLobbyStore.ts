@@ -73,16 +73,27 @@ export interface MiniTourLobby {
 }
 
 export interface PartnerData {
-  partner: { name: string; logo: string; tier: string; verified: boolean; rating: number }
-  metrics: {
-    monthlyRevenue: number
-    totalRevenue: number
+  id: string
+  username: string
+  email: string
+  totalPlayers: number
+  totalRevenue: number
+  activeLobbies: number
+  totalLobbies: number
+  monthlyRevenue: number
+  balance: number
+  totalMatches: number
+  revenueShare: number
+  subscription?: any
+  metrics?: {
     totalPlayers: number
+    totalRevenue: number
     activeLobbies: number
     totalLobbies: number
+    monthlyRevenue: number
+    balance: number
     totalMatches: number
     revenueShare: number
-    balance: number
   }
 }
 
@@ -110,15 +121,11 @@ export interface Player {
   id: string;
   username: string;
   email: string;
-  riotGameName?: string;
-  riotGameTag?: string;
-  region?: string;
-  role: string;
-  totalMatchesPlayed: number;
-  tournamentsWon: number;
-  balance: number;
-  isActive: boolean;
-  totalAmountWon: number;
+  riotGameName: string;
+  riotGameTag: string;
+  totalPoints: number;
+  lobbiesPlayed: number;
+  lastPlayed: string;
 }
 
 export interface MiniTourLobbyState {
@@ -131,6 +138,7 @@ export interface MiniTourLobbyState {
 
 interface MiniTourLobbyActions {
   fetchLobby: (id: string) => Promise<void>;
+  fetchLobbies: () => Promise<MiniTourLobby[]>;
   joinLobby: (lobbyId: string, userId: string) => Promise<void>;
   leaveLobby: (lobbyId: string) => Promise<void>;
   startLobby: (lobbyId: string) => Promise<void>;
@@ -139,7 +147,7 @@ interface MiniTourLobbyActions {
   setLobby: (lobby: MiniTourLobby) => void;
   createLobby: (formData: FormData, router: any) => Promise<void>;
   updateLobby: (lobbyId: string, formData: FormData, router: any) => Promise<void>;
-  deleteLobby: (lobbyId: string, router: any) => Promise<void>;
+  deleteLobby: (lobbyId: string, router: any, onLobbiesUpdate?: (lobbies: MiniTourLobby[]) => void) => Promise<void>;
   assignPlayerToLobby: (lobbyId: string, userId: string) => Promise<void>;
 }
 
@@ -202,12 +210,22 @@ export const useMiniTourLobbyStore = create<MiniTourLobbyState & MiniTourLobbyAc
     }
   },
 
-  deleteLobby: async (lobbyId: string, router: any) => {
+  deleteLobby: async (lobbyId: string, router: any, onLobbiesUpdate?: (lobbies: MiniTourLobby[]) => void) => {
     set({ isProcessingAction: true, error: null });
     try {
       await MiniTourLobbyService.deleteLobby(lobbyId);
       set({ lobby: null });
       router.push("/dashboard/partner");
+
+      // Refresh lobbies list to update UI
+      if (onLobbiesUpdate) {
+        try {
+          const updatedLobbies = await MiniTourLobbyService.getAllLobbies();
+          onLobbiesUpdate(updatedLobbies);
+        } catch (fetchError) {
+          console.error("Failed to refresh lobbies list:", fetchError);
+        }
+      }
       toast({
         title: "Thành công",
         description: "Sảnh đã được xóa thành công.",
@@ -255,6 +273,16 @@ export const useMiniTourLobbyStore = create<MiniTourLobbyState & MiniTourLobbyAc
     }
   },
 
+  fetchLobbies: async () => {
+    try {
+      const lobbies = await MiniTourLobbyService.getAllLobbies();
+      return lobbies;
+    } catch (error) {
+      console.error("Failed to fetch lobbies:", error);
+      throw error;
+    }
+  },
+
   fetchLobby: async (id) => {
     set({ isLoading: true, error: null });
     try {
@@ -281,10 +309,10 @@ export const useMiniTourLobbyStore = create<MiniTourLobbyState & MiniTourLobbyAc
       console.error("Failed to join lobby:", error);
       const errorMessage = error.message || "Không thể tham gia sảnh. Vui lòng thử lại.";
       set({ error: errorMessage });
-      toast({ 
-        title: "Lỗi", 
-        description: errorMessage, 
-        variant: "destructive" 
+      toast({
+        title: "Lỗi",
+        description: errorMessage,
+        variant: "destructive"
       });
     } finally {
       set({ isProcessingAction: false });
