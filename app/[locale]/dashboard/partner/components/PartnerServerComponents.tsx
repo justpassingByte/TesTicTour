@@ -218,7 +218,7 @@ export async function OverviewTab({ partnerData, lobbies }: { partnerData: Partn
   );
 }
 
-export async function LobbiesTab({ lobbies }: { lobbies: MiniTourLobby[] }) {
+export async function LobbiesTab({ lobbies, onLobbiesUpdate }: { lobbies: MiniTourLobby[]; onLobbiesUpdate?: (lobbies: MiniTourLobby[]) => void }) {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
@@ -285,7 +285,7 @@ export async function LobbiesTab({ lobbies }: { lobbies: MiniTourLobby[] }) {
                     </div>
                   </TableCell>
                   <TableCell className="text-right">
-                    <LobbyActions lobby={lobby} />
+                    <LobbyActions lobby={lobby} onLobbiesUpdate={onLobbiesUpdate} />
                   </TableCell>
                 </TableRow>
               ))}

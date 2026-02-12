@@ -19,7 +19,7 @@ function SimpleChart({ data, color, title }: { data: number[]; color: string; ti
   const maxValue = Math.max(...data)
   const minValue = Math.min(...data)
   const range = maxValue - minValue || 1
-  
+
   return (
     <div className="h-[200px] w-full">
       <div className="flex items-end justify-between h-full px-2">
@@ -27,9 +27,9 @@ function SimpleChart({ data, color, title }: { data: number[]; color: string; ti
           const height = range > 0 ? ((value - minValue) / range) * 100 : 50
           return (
             <div key={index} className="flex flex-col items-center flex-1">
-              <div 
+              <div
                 className="w-full rounded-t-sm transition-all duration-300 hover:opacity-80"
-                style={{ 
+                style={{
                   height: `${height}%`,
                   backgroundColor: color,
                   minHeight: '4px'
@@ -49,7 +49,17 @@ function SimpleChart({ data, color, title }: { data: number[]; color: string; ti
 export async function AnalyticsTabNew({ partnerData }: AnalyticsTabNewProps) {
   if (!partnerData) return <p>Could not load analytics.</p>
 
-  const { metrics } = partnerData
+  // Consolidate metrics from either the nested object or the top-level partnerData
+  const metrics = partnerData.metrics || {
+    totalPlayers: partnerData.totalPlayers || 0,
+    totalRevenue: partnerData.totalRevenue || 0,
+    activeLobbies: partnerData.activeLobbies || 0,
+    totalLobbies: partnerData.totalLobbies || 0,
+    monthlyRevenue: partnerData.monthlyRevenue || 0,
+    balance: partnerData.balance || 0,
+    totalMatches: partnerData.totalMatches || 0,
+    revenueShare: partnerData.revenueShare || 0,
+  }
 
   // Generate mock growth data based on real metrics
   const playerGrowthData = [
@@ -57,8 +67,8 @@ export async function AnalyticsTabNew({ partnerData }: AnalyticsTabNewProps) {
     Math.max(0, (metrics?.totalPlayers || 0) - 12),
     Math.max(0, (metrics?.totalPlayers || 0) - 9),
     Math.max(0, (metrics?.totalPlayers || 0) - 6),
-    Math.max(0, metrics.totalPlayers - 3),
-    metrics.totalPlayers
+    Math.max(0, (metrics?.totalPlayers || 0) - 3),
+    (metrics?.totalPlayers || 0)
   ]
 
   const revenueGrowthData = [
@@ -154,7 +164,7 @@ export async function AnalyticsTabNew({ partnerData }: AnalyticsTabNewProps) {
           <CardContent>
             <div className="space-y-2">
               <div className="flex items-baseline justify-between">
-                <span className="text-3xl font-bold">${metrics.monthlyRevenue.toLocaleString()}</span>
+                <span className="text-3xl font-bold">${(metrics?.monthlyRevenue || 0).toLocaleString()}</span>
                 <span className="text-sm text-muted-foreground">USD</span>
               </div>
               <div className="flex items-center text-sm">
@@ -200,17 +210,17 @@ export async function AnalyticsTabNew({ partnerData }: AnalyticsTabNewProps) {
               <div className="space-y-2">
                 <div className="flex justify-between text-sm">
                   <span>Total Lobbies</span>
-                  <span className="font-medium">{metrics.totalLobbies}</span>
+                  <span className="font-medium">{metrics?.totalLobbies || 0}</span>
                 </div>
                 <div className="flex justify-between text-sm">
                   <span>Active Rate</span>
                   <span className="font-medium text-green-600">
-                    {metrics.totalLobbies > 0 ? Math.round((metrics.activeLobbies / metrics.totalLobbies) * 100) : 0}%
+                    {(metrics?.totalLobbies || 0) > 0 ? Math.round(((metrics?.activeLobbies || 0) / (metrics?.totalLobbies || 0)) * 100) : 0}%
                   </span>
                 </div>
                 <div className="flex justify-between text-sm">
                   <span>Revenue Share</span>
-                  <span className="font-medium">{metrics.revenueShare}%</span>
+                  <span className="font-medium">{metrics?.revenueShare || 0}%</span>
                 </div>
               </div>
             </div>
@@ -219,15 +229,15 @@ export async function AnalyticsTabNew({ partnerData }: AnalyticsTabNewProps) {
               <div className="space-y-2">
                 <div className="flex justify-between text-sm">
                   <span>Total Revenue</span>
-                  <span className="font-medium">${metrics.totalRevenue.toLocaleString()}</span>
+                  <span className="font-medium">${(metrics?.totalRevenue || 0).toLocaleString()}</span>
                 </div>
                 <div className="flex justify-between text-sm">
                   <span>Current Balance</span>
-                  <span className="font-medium">${metrics.balance.toLocaleString()}</span>
+                  <span className="font-medium">${(metrics?.balance || 0).toLocaleString()}</span>
                 </div>
                 <div className="flex justify-between text-sm">
                   <span>Avg Monthly</span>
-                  <span className="font-medium">${Math.round(metrics.totalRevenue / 6).toLocaleString()}</span>
+                  <span className="font-medium">${Math.round((metrics?.totalRevenue || 0) / 6).toLocaleString()}</span>
                 </div>
               </div>
             </div>

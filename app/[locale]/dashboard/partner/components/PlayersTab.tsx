@@ -8,35 +8,25 @@ import { Star, Trophy, Users, TrendingUp } from "lucide-react"
 import Link from "next/link"
 import PlayersTabClient from "./PlayersTabClient"
 
+// Matches the new simplified list API response
 interface Player {
   id: string
-  miniTourLobbyId: string
-  userId: string
-  joinedAt: string
-  user: {
-    id: string
-    username: string
-    email: string
-    riotGameName: string
-    riotGameTag: string
-    region: string
-    role: string
-    totalMatchesPlayed: number
-    tournamentsWon: number
-    balance: {
-      amount: number
-    } | null
-    referrer: string
-    createdAt: string
-  }
+  username: string
+  email: string
+  riotGameName: string
+  riotGameTag: string
+  totalPoints: number
+  lobbiesPlayed: number
+  lastPlayed: string
 }
 
 interface PlayersTabProps {
   players: Player[]
   currentBalance?: number
   totalRevenue?: number
+  onPlayersUpdate?: () => void
 }
 
-export async function PlayersTab({ players, currentBalance = 0, totalRevenue = 0 }: PlayersTabProps) {
-  return <PlayersTabClient players={players} currentBalance={currentBalance} totalRevenue={totalRevenue} />
+export function PlayersTab({ players, currentBalance = 0, totalRevenue = 0, onPlayersUpdate }: PlayersTabProps) {
+  return <PlayersTabClient players={players} currentBalance={currentBalance} totalRevenue={totalRevenue} onPlayersUpdate={onPlayersUpdate} />
 }

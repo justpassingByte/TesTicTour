@@ -71,17 +71,17 @@ export function PlayerTab({ referrer }: { referrer: string }) {
   }, [referrer])
 
   if (loading) {
-  return (
+    return (
       <div className="space-y-4">
         <Skeleton className="h-10 w-48" />
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {Array.from({ length: 6 }).map((_, i) => (
             <Skeleton key={i} className="h-32 w-full" />
           ))}
+        </div>
       </div>
-    </div>
-  )
-}
+    )
+  }
 
   if (error) {
     return <div className="text-red-500">{error}</div>
@@ -93,7 +93,7 @@ export function PlayerTab({ referrer }: { referrer: string }) {
         <h2 className="text-2xl font-bold">Your Players</h2>
         <Button size="sm">
           <Plus className="mr-2 h-4 w-4" /> Add Player
-          </Button>
+        </Button>
       </div>
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         {players.length === 0 ? (
@@ -117,22 +117,22 @@ export function PlayerTab({ referrer }: { referrer: string }) {
                     <DropdownMenuItem className="text-red-600">Delete Player</DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
-          </CardHeader>
+              </CardHeader>
               <CardContent className="space-y-2">
                 <div className="flex items-center text-sm text-muted-foreground">
                   <Eye className="mr-2 h-4 w-4" />
-                  <span>Total Matches Played: {player.totalMatchesPlayed}</span>
+                  <span>Total Points: {player.totalPoints}</span>
                 </div>
                 <div className="flex items-center text-sm text-muted-foreground">
                   <TrendingUp className="mr-2 h-4 w-4" />
-                  <span>Tournaments Won: {player.tournamentsWon}</span>
+                  <span>Lobbies Played: {player.lobbiesPlayed}</span>
                 </div>
                 <div className="flex items-center text-sm text-muted-foreground">
                   <Coins className="mr-2 h-4 w-4" />
-                  <span>Total Amount Won: ${player.totalAmountWon.toLocaleString()}</span>
-            </div>
-          </CardContent>
-        </Card>
+                  <span>Last Played: {player.lastPlayed ? new Date(player.lastPlayed).toLocaleDateString() : 'N/A'}</span>
+                </div>
+              </CardContent>
+            </Card>
           ))
         )}
       </div>
@@ -169,43 +169,43 @@ export function MiniTournamentsTab() {
   return (
     <div className="space-y-4">
       <h2 className="text-2xl font-bold">Mini-Tournaments</h2>
-          <Table>
-            <TableHeader>
-              <TableRow>
+      <Table>
+        <TableHeader>
+          <TableRow>
             <TableHead>Tournament Name</TableHead>
             <TableHead>Status</TableHead>
             <TableHead>Players</TableHead>
             <TableHead>Prize Pool</TableHead>
             <TableHead>Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
           {tournaments.map((tournament) => (
             <TableRow key={tournament.id}>
               <TableCell className="font-medium">{tournament.name}</TableCell>
               <TableCell>{tournament.status}</TableCell>
               <TableCell>{tournament.currentPlayers}/{tournament.maxPlayers}</TableCell>
               <TableCell>${tournament.prizePool.toLocaleString()}</TableCell>
-                  <TableCell>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
+              <TableCell>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
                     <Button variant="ghost" className="h-8 w-8 p-0">
                       <span className="sr-only">Open menu</span>
-                          <MoreHorizontal className="h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                      <MoreHorizontal className="h-4 w-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuLabel>Actions</DropdownMenuLabel>
                     <DropdownMenuItem>View Tournament</DropdownMenuItem>
                     <DropdownMenuItem>Edit Tournament</DropdownMenuItem>
                     <DropdownMenuItem>Delete Tournament</DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
     </div>
   );
 }

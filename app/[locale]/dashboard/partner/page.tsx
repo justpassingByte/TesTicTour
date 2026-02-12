@@ -69,13 +69,13 @@ export default function PartnerDashboardPage() {
           api.get('/minitour-lobbies'),
           api.get('/partner/players')
         ]);
-        
+
         console.log('[PartnerDashboardPage] API responses:', {
           partnerResponse: partnerResponse.data,
           lobbiesResponse: lobbiesResponse.data,
           playersResponse: playersResponse.data
         });
-        
+
         setPartnerData(partnerResponse.data.data);
         setLobbies(lobbiesResponse.data.data);
         setPlayers(playersResponse.data.data);
@@ -88,6 +88,30 @@ export default function PartnerDashboardPage() {
 
     fetchData();
   }, []);
+
+  const refreshPlayers = async () => {
+    try {
+      const response = await api.get('/partner/players');
+      setPlayers(response.data.data);
+    } catch (error) {
+      console.error('Failed to refresh players:', error);
+    }
+  };
+
+  const refreshDashboard = async () => {
+    try {
+      const [partnerResponse, lobbiesResponse, playersResponse] = await Promise.all([
+        api.get('/partner/summary'),
+        api.get('/minitour-lobbies'),
+        api.get('/partner/players')
+      ]);
+      setPartnerData(partnerResponse.data.data);
+      setLobbies(lobbiesResponse.data.data);
+      setPlayers(playersResponse.data.data);
+    } catch (error) {
+      console.error('Failed to refresh dashboard:', error);
+    }
+  };
 
   if (loading) {
     return (
@@ -117,6 +141,11 @@ export default function PartnerDashboardPage() {
     monthlyRevenue: partnerData?.monthlyRevenue || 0, // Now provided by API
   };
 
+  const handleLobbiesUpdate = (updatedLobbies: MiniTourLobby[]) => {
+    setLobbies(updatedLobbies);
+    refreshDashboard(); // Refresh everything when lobbies change
+  };
+
   return (
     <div className="container py-10 space-y-8">
       <div className="flex flex-col space-y-2 md:flex-row md:items-center md:justify-between md:space-y-0">
@@ -125,12 +154,7 @@ export default function PartnerDashboardPage() {
           <p className="text-muted-foreground">Manage your partnership, lobbies, players, and earnings.</p>
         </div>
         <div className="flex items-center gap-2">
-          <Link href="/dashboard/partner/lobbies">
-            <Button>
-              <Plus className="mr-2 h-4 w-4" />
-              Create Lobby
-            </Button>
-          </Link>
+
           <SyncStatus status="live" />
         </div>
       </div>
@@ -197,7 +221,7 @@ export default function PartnerDashboardPage() {
         </TabsContent>
 
         <TabsContent value="lobbies" className="space-y-4">
-          <LobbiesTab lobbies={lobbies as any} />
+          <LobbiesTab lobbies={lobbies as any} onLobbiesUpdate={handleLobbiesUpdate} />
         </TabsContent>
 
         <TabsContent value="analytics" className="space-y-4">
@@ -205,7 +229,10 @@ export default function PartnerDashboardPage() {
         </TabsContent>
 
         <TabsContent value="team" className="space-y-4">
-          <PlayersTab players={players as any} />
+          <PlayersTab
+            players={players as any}
+            onPlayersUpdate={refreshPlayers}
+          />
         </TabsContent>
 
         <TabsContent value="subscription" className="space-y-4">
