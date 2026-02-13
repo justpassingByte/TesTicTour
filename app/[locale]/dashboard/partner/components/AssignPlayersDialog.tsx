@@ -25,20 +25,21 @@ interface AssignPlayersDialogProps {
   lobbyId: string
   isOpen: boolean
   onOpenChange: (open: boolean) => void
+  onSuccess?: () => void // New: Callback to refresh data
 }
 
-export function AssignPlayersDialog({ lobbyId, isOpen, onOpenChange }: AssignPlayersDialogProps) {
+export function AssignPlayersDialog({ lobbyId, isOpen, onOpenChange, onSuccess }: AssignPlayersDialogProps) {
   const [searchTerm, setSearchTerm] = useState("")
   const [selectedPlayers, setSelectedPlayers] = useState<string[]>([]) // Store player IDs
   const { assignPlayerToLobby, isProcessingAction } = useMiniTourLobbyStore()
-  const { allPlayers, fetchAllPlayers, isLoading: loadingPlayers } = usePlayerStore()
+  const { allPlayers, fetchPartnerPlayers, isLoading: loadingPlayers } = usePlayerStore()
 
   useEffect(() => {
     // Fetch all players only once when dialog opens
     if (isOpen) {
-      fetchAllPlayers() // Fetch all players without search term
+      fetchPartnerPlayers() // Use the new partner-specific fetch
     }
-  }, [isOpen, fetchAllPlayers])
+  }, [isOpen, fetchPartnerPlayers])
 
   const handleCheckboxChange = (playerId: string, checked: boolean) => {
     if (checked) {
@@ -83,6 +84,10 @@ export function AssignPlayersDialog({ lobbyId, isOpen, onOpenChange }: AssignPla
         description: `Failed to assign ${failCount} player(s). Check console for details.`,
         variant: "destructive",
       })
+    }
+
+    if (successCount > 0 && onSuccess) {
+      onSuccess() // Refresh parent data
     }
 
     onOpenChange(false) // Close dialog after attempting assignment

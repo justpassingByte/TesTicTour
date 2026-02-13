@@ -1,3 +1,5 @@
+"use client"
+
 import Link from "next/link"
 import {
   BarChart3,
@@ -35,10 +37,11 @@ import { Textarea } from "@/components/ui/textarea"
 import { Switch } from "@/components/ui/switch"
 import api from "@/app/lib/apiConfig"
 import React, { FormEvent, useState } from 'react';
+import LobbiesTabClient from "./LobbiesTabClient";
 
 // --- ASYNC COMPONENTS ---
 
-export async function PartnerHeader({ partnerData }: { partnerData: PartnerData | null }) {
+export function PartnerHeader({ partnerData }: { partnerData: PartnerData | null }) {
   if (!partnerData) return null
   return (
     <div className="flex items-center space-x-4">
@@ -58,7 +61,7 @@ export async function PartnerHeader({ partnerData }: { partnerData: PartnerData 
   )
 }
 
-export async function KeyMetrics({ partnerData }: { partnerData: PartnerData | null }) {
+export function KeyMetrics({ partnerData }: { partnerData: PartnerData | null }) {
   if (!partnerData) return <div>Failed to load partner metrics. Please check the API.</div>
   return (
     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
@@ -110,7 +113,7 @@ export async function KeyMetrics({ partnerData }: { partnerData: PartnerData | n
   )
 }
 
-export async function OverviewTab({ partnerData, lobbies }: { partnerData: PartnerData | null; lobbies: MiniTourLobby[] }) {
+export function OverviewTab({ partnerData, lobbies }: { partnerData: PartnerData | null; lobbies: MiniTourLobby[] }) {
   if (!partnerData) return <p>Could not load overview.</p>
 
   return (
@@ -218,85 +221,11 @@ export async function OverviewTab({ partnerData, lobbies }: { partnerData: Partn
   );
 }
 
-export async function LobbiesTab({ lobbies, onLobbiesUpdate }: { lobbies: MiniTourLobby[]; onLobbiesUpdate?: (lobbies: MiniTourLobby[]) => void }) {
-  return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-bold">Your Lobbies</h2>
-        <Link href="/dashboard/partner/lobbies">
-          <Button>
-            <Plus className="mr-2 h-4 w-4" /> Create Lobby
-          </Button>
-        </Link>
-      </div>
-      <Card>
-        <CardContent className="pt-6">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Lobby Name</TableHead>
-                <TableHead className="text-center">Status</TableHead>
-                <TableHead className="text-center">Players</TableHead>
-                <TableHead className="text-center">Entry Fee</TableHead>
-                <TableHead className="text-center">Prize Pool</TableHead>
-                <TableHead className="text-center">Rating</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {lobbies.map((lobby) => (
-                <TableRow key={lobby.id}>
-                  <TableCell className="font-medium">{lobby.name}</TableCell>
-                  <TableCell className="text-center">
-                    <Badge
-                      variant="outline"
-                      className={`
-                        ${lobby.status === "WAITING" ? "bg-green-500/20 text-green-500" : ""}
-                        ${lobby.status === "IN_PROGRESS" ? "bg-yellow-500/20 text-yellow-500" : ""}
-                        ${lobby.status === "COMPLETED" || lobby.status === "CANCELLED"
-                          ? "bg-red-500/20 text-red-500"
-                          : ""
-                        }
-                      `}
-                    >
-                      {lobby.status}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="text-center">
-                    {lobby.currentPlayers}/{lobby.maxPlayers}
-                  </TableCell>
-                  <TableCell className="text-center">
-                    <div className="flex items-center justify-center">
-                      <Coins className="mr-1 h-3 w-3" />
-                      {lobby.entryFee}
-                    </div>
-                  </TableCell>
-                  <TableCell className="text-center">
-                    <div className="flex items-center justify-center">
-                      <Coins className="mr-1 h-3 w-3" />
-                      {lobby.prizePool}
-                    </div>
-                  </TableCell>
-                  <TableCell className="text-center">
-                    <div className="flex items-center justify-center">
-                      <Star className="mr-1 h-3 w-3 text-yellow-500" />
-                      {lobby.averageRating}
-                    </div>
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <LobbyActions lobby={lobby} onLobbiesUpdate={onLobbiesUpdate} />
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
-    </div>
-  )
+export function LobbiesTab({ lobbies, onLobbiesUpdate }: { lobbies: MiniTourLobby[]; onLobbiesUpdate?: (lobbies: MiniTourLobby[]) => void }) {
+  return <LobbiesTabClient initialLobbies={lobbies} onLobbiesUpdate={onLobbiesUpdate} />
 }
 
-export async function AnalyticsTab({ analyticsData }: { analyticsData: AnalyticsData | null }) {
+export function AnalyticsTab({ analyticsData }: { analyticsData: AnalyticsData | null }) {
   if (!analyticsData) return <p>Could not load analytics.</p>
 
   const { playerGrowth, revenueGrowth, performance } = analyticsData
@@ -377,7 +306,7 @@ export async function AnalyticsTab({ analyticsData }: { analyticsData: Analytics
   );
 }
 
-export async function RevenueTab({ partnerData, lobbies }: { partnerData: PartnerData | null; lobbies: MiniTourLobby[] }) {
+export function RevenueTab({ partnerData, lobbies }: { partnerData: PartnerData | null; lobbies: MiniTourLobby[] }) {
   if (!partnerData) return <p>Could not load revenue data.</p>
 
   // Calculate additional revenue metrics
@@ -395,7 +324,7 @@ export async function RevenueTab({ partnerData, lobbies }: { partnerData: Partne
               <div>
                 <p className="text-2xl font-bold">${partnerData.totalRevenue?.toLocaleString() || 0}</p>
                 <p className="text-xs text-muted-foreground">Total Revenue</p>
-                <p className="text-xs text-green-600">30% of prize pools</p>
+                <p className="text-xs text-green-600">From all completed matches</p>
               </div>
             </div>
           </CardContent>
@@ -419,7 +348,7 @@ export async function RevenueTab({ partnerData, lobbies }: { partnerData: Partne
               <div>
                 <p className="text-2xl font-bold">${partnerData.monthlyRevenue?.toLocaleString() || 0}</p>
                 <p className="text-xs text-muted-foreground">Monthly Revenue</p>
-                <p className="text-xs text-orange-600">Est. monthly earnings</p>
+                <p className="text-xs text-orange-600">Last 30 days earnings</p>
               </div>
             </div>
           </CardContent>
@@ -431,7 +360,7 @@ export async function RevenueTab({ partnerData, lobbies }: { partnerData: Partne
               <div>
                 <p className="text-2xl font-bold">{partnerData.totalMatches?.toLocaleString() || 0}</p>
                 <p className="text-xs text-muted-foreground">Matches Played</p>
-                <p className="text-xs text-purple-600">From completed lobbies</p>
+                <p className="text-xs text-purple-600">Across all lobbies</p>
               </div>
             </div>
           </CardContent>
@@ -449,10 +378,7 @@ export async function RevenueTab({ partnerData, lobbies }: { partnerData: Partne
               <span className="text-sm">Total Prize Pools</span>
               <span className="text-sm font-medium">${lobbies.reduce((sum, lobby) => sum + (lobby.prizePool || 0), 0).toLocaleString()}</span>
             </div>
-            <div className="flex justify-between">
-              <span className="text-sm">Your Revenue Share</span>
-              <span className="text-sm font-medium">{partnerData.revenueShare || 30}%</span>
-            </div>
+
             <div className="flex justify-between">
               <span className="text-sm">Total Revenue Earned</span>
               <span className="text-sm font-bold text-green-600">${partnerData.totalRevenue?.toLocaleString() || 0}</span>
@@ -503,12 +429,13 @@ export async function RevenueTab({ partnerData, lobbies }: { partnerData: Partne
                 <TableHead>Status</TableHead>
                 <TableHead>Prize Pool</TableHead>
                 <TableHead>Your Share</TableHead>
-                <TableHead>Revenue</TableHead>
+                <TableHead>Revenue (Est.)</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {lobbies.map((lobby) => {
-                const lobbyRevenue = Math.floor((lobby.prizePool || 0) * 0.3)
+                const sharePercent = (lobby.partnerRevenueShare !== undefined ? lobby.partnerRevenueShare : 0.2);
+                const lobbyRevenue = Math.floor((lobby.entryFee || 0) * (lobby.currentPlayers || 0) * sharePercent);
                 return (
                   <TableRow key={lobby.id}>
                     <TableCell className="font-medium">{lobby.name}</TableCell>
@@ -518,7 +445,7 @@ export async function RevenueTab({ partnerData, lobbies }: { partnerData: Partne
                       </Badge>
                     </TableCell>
                     <TableCell>${(lobby.prizePool || 0).toLocaleString()}</TableCell>
-                    <TableCell>30%</TableCell>
+                    <TableCell>{Math.round(sharePercent * 100)}%</TableCell>
                     <TableCell className="font-bold text-green-600">${lobbyRevenue.toLocaleString()}</TableCell>
                   </TableRow>
                 )
@@ -616,8 +543,9 @@ export function SettingsTab() {
               <Label htmlFor="riotApiKey">Riot API Key</Label>
               <Input
                 id="riotApiKey"
-                name="usePersonalRiotApi"
-                defaultChecked={partnerSettings.usePersonalRiotApi}
+                name="riotApiKey"
+                defaultValue={partnerSettings.riotApiKey}
+                placeholder="RGAPI-..."
               />
               <div className="flex items-center space-x-2">
                 <Switch
@@ -631,25 +559,7 @@ export function SettingsTab() {
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader><CardTitle>Revenue Settings</CardTitle></CardHeader>
-          <CardContent className="space-y-4">
-            <div>
-              <Label htmlFor="partnerRevenueShare">Partner Revenue Share (%)</Label>
-              <Input
-                id="partnerRevenueShare"
-                type="number"
-                min="0"
-                step="1"
-                defaultValue={partnerSettings.partnerRevenueShare}
-                className="w-full"
-              />
-              <p className="text-sm text-muted-foreground mt-1">
-                Set the percentage of entry fees you receive from each lobby. Default is 30%.
-              </p>
-            </div>
-          </CardContent>
-        </Card>
+
 
         <Card>
           <CardHeader><CardTitle>Notification Preferences</CardTitle></CardHeader>

@@ -1,3 +1,5 @@
+
+// ... (keep existing imports)
 import { create } from "zustand";
 import api from "@/app/lib/apiConfig";
 
@@ -7,15 +9,17 @@ export interface AdminUser {
   email: string;
   role: string;
   balance: number;
+  subscriptionPlan?: string | null;
+  subscriptionStatus?: string | null;
 }
 
 export interface ITransaction {
   id: string;
-  type: string; // deposit, withdraw, refund, entry_fee, reward
+  type: string;
   amount: number;
-  status: string; // pending, success, failed
+  status: string;
   refId?: string;
-  createdAt: string; // DateTime
+  createdAt: string;
 }
 
 export interface AdminUserDetail extends AdminUser {
@@ -23,7 +27,7 @@ export interface AdminUserDetail extends AdminUser {
   riotGameName: string;
   riotGameTag: string;
   region: string;
-  createdAt: string; // Hoặc DateTime nếu bạn có handler cho DateTime object
+  createdAt: string;
   rank?: string;
   rankUpdatedAt?: string;
   totalMatchesPlayed: number;
@@ -33,32 +37,84 @@ export interface AdminUserDetail extends AdminUser {
   tournamentsPlayed: number;
   tournamentsWon: number;
   lastUpdatedStats?: string;
-  transactions?: ITransaction[]; // Thêm mảng transactions
+  transactions?: ITransaction[];
+}
+
+
+export interface ISubscription {
+  id: string;
+  userId: string;
+  plan: string;
+  status: string;
+  startDate: string;
+  endDate?: string;
+  features: any;
+  monthlyPrice?: number;
+  annualPrice?: number;
+  autoRenew: boolean;
+  createdAt: string;
+}
+
+export interface PartnerPlayer {
+  id: string;
+  username: string;
+  email: string;
+  riotGameName: string;
+  riotGameTag: string;
+  totalPoints: number;
+  lobbiesPlayed: number;
+  lastPlayed: string | Date;
+}
+
+export interface AdminPartnerDetail {
+  partner: AdminUserDetail;
+  stats: {
+    totalPlayers: number;
+    totalRevenue: number;
+    activeLobbies: number;
+    totalLobbies: number;
+    monthlyRevenue: number;
+    totalMatches: number;
+    balance: number;
+    lobbyStatuses?: {
+      WAITING: number;
+      IN_PROGRESS: number;
+      COMPLETED: number;
+    };
+  };
+  transactions: ITransaction[];
+  lobbies: any[];
+  tournaments: any[];
+  players: PartnerPlayer[];
+  subscription?: ISubscription | null;
 }
 
 interface AdminUserState {
   users: AdminUser[];
   loading: boolean;
-  selectedUserDetail: AdminUserDetail | null; // Để lưu thông tin chi tiết của user được chọn
-  currentPage: number; // Thêm trạng thái cho phân trang
-  totalPages: number; // Thêm trạng thái cho phân trang
-  totalItems: number; // Thêm trạng thái cho phân trang
-  limit: number; // Thêm trạng thái cho giới hạn mỗi trang
-  roleFilter: string; // Thêm state cho bộ lọc
-  setPagination: (page: number, limit: number) => void; // Hàm để cập nhật phân trang
-  setRoleFilter: (role: string) => void; // Hàm để cập nhật bộ lọc
-  fetchUsers: () => Promise<void>; // Cập nhật tham số cho fetchUsers
+  selectedUserDetail: AdminUserDetail | null;
+  selectedPartnerDetail: AdminPartnerDetail | null; // Added
+  currentPage: number;
+  totalPages: number;
+  totalItems: number;
+  limit: number;
+  roleFilter: string;
+  setPagination: (page: number, limit: number) => void;
+  setRoleFilter: (role: string) => void;
+  fetchUsers: () => Promise<void>;
   fetchUserDetail: (id: string) => Promise<void>;
-  createUser: (data: { username: string; email: string; password: string; role: string }) => Promise<void>; // Hàm mới để tạo user với role
-  updateUser: (id: string, data: Partial<AdminUserDetail>) => Promise<void>; // Hàm mới để cập nhật user
+  fetchPartnerDetail: (id: string) => Promise<void>; // Added
+  createUser: (data: { username: string; email: string; password: string; role: string }) => Promise<void>;
+  updateUser: (id: string, data: Partial<AdminUserDetail>) => Promise<void>;
   banUser: (id: string) => Promise<void>;
-  deposit: (userId: string, amount: number) => Promise<void>; // Hàm mới để nạp tiền
+  deposit: (userId: string, amount: number) => Promise<void>;
 }
 
 export const useAdminUserStore = create<AdminUserState>((set, get) => ({
   users: [],
   loading: true,
   selectedUserDetail: null,
+  selectedPartnerDetail: null,
   currentPage: 1,
   totalPages: 1,
   totalItems: 0,
@@ -84,9 +140,9 @@ export const useAdminUserStore = create<AdminUserState>((set, get) => ({
       }
 
       const res = await api.get("/admin/users", { params });
-      set({ 
-        users: res.data.data, 
-        loading: false, 
+      set({
+        users: res.data.data,
+        loading: false,
         currentPage: res.data.pagination.currentPage,
         totalPages: res.data.pagination.totalPages,
         totalItems: res.data.pagination.totalItems,
@@ -107,6 +163,16 @@ export const useAdminUserStore = create<AdminUserState>((set, get) => ({
       set({ loading: false, selectedUserDetail: null });
     }
   },
+  fetchPartnerDetail: async (id) => {
+    set({ loading: true, selectedPartnerDetail: null });
+    try {
+      const res = await api.get(`/admin/partners/${id}`);
+      set({ selectedPartnerDetail: res.data, loading: false });
+    } catch (error) {
+      console.error("Failed to fetch partner detail:", error);
+      set({ loading: false, selectedPartnerDetail: null });
+    }
+  },
   createUser: async (data) => {
     await api.post("/admin/users", data);
     set({ currentPage: 1 });
@@ -116,8 +182,11 @@ export const useAdminUserStore = create<AdminUserState>((set, get) => ({
     set({ loading: true });
     try {
       const res = await api.put(`/admin/users/${id}`, data);
+      // Update both stores if applicable, simplistic approach for now
       set({ selectedUserDetail: res.data, loading: false });
       await get().fetchUsers();
+      // If we are in partner view, we might want to refresh that too, 
+      // but let's assume editing is done on basic user info for now.
     } catch (error) {
       console.error("Failed to update user:", error);
       set({ loading: false });
@@ -132,10 +201,16 @@ export const useAdminUserStore = create<AdminUserState>((set, get) => ({
     try {
       const res = await api.post(`/admin/users/${userId}/deposit`, { amount });
       set({ selectedUserDetail: res.data, loading: false });
+      // If it was a partner, we might need to update selectedPartnerDetail balance too
+      const currentPartner = get().selectedPartnerDetail;
+      if (currentPartner && currentPartner.partner.id === userId) {
+        // Refresh partner detail
+        await get().fetchPartnerDetail(userId);
+      }
     } catch (error) {
       console.error("Failed to deposit:", error);
       set({ loading: false });
       throw error;
     }
   },
-})); 
+}));

@@ -1,86 +1,105 @@
+"use client";
+
+import { useMemo } from "react"
 import {
-  BarChart3,
-  TrendingUp,
-  TrendingDown,
   Users,
   DollarSign,
   Star,
+  TrendingUp,
 } from "lucide-react"
+import {
+  Bar,
+  BarChart,
+  ResponsiveContainer,
+  XAxis,
+  YAxis,
+  Tooltip,
+  CartesianGrid
+} from "recharts"
+import { format, subMonths, startOfMonth, endOfMonth, isWithinInterval, parseISO } from "date-fns"
 
-import { PartnerData } from "@/app/stores/miniTourLobbyStore"
+import { PartnerData, MiniTourLobby } from "@/app/stores/miniTourLobbyStore"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 
 interface AnalyticsTabNewProps {
   partnerData: PartnerData | null
+  lobbies: MiniTourLobby[]
 }
 
-// Simple chart component using SVG
-function SimpleChart({ data, color, title }: { data: number[]; color: string; title: string }) {
-  const maxValue = Math.max(...data)
-  const minValue = Math.min(...data)
-  const range = maxValue - minValue || 1
-
-  return (
-    <div className="h-[200px] w-full">
-      <div className="flex items-end justify-between h-full px-2">
-        {data.map((value, index) => {
-          const height = range > 0 ? ((value - minValue) / range) * 100 : 50
-          return (
-            <div key={index} className="flex flex-col items-center flex-1">
-              <div
-                className="w-full rounded-t-sm transition-all duration-300 hover:opacity-80"
-                style={{
-                  height: `${height}%`,
-                  backgroundColor: color,
-                  minHeight: '4px'
-                }}
-              />
-              <span className="text-xs text-muted-foreground mt-1">
-                {value}
-              </span>
-            </div>
-          )
-        })}
-      </div>
-    </div>
-  )
-}
-
-export async function AnalyticsTabNew({ partnerData }: AnalyticsTabNewProps) {
-  if (!partnerData) return <p>Could not load analytics.</p>
-
-  // Consolidate metrics from either the nested object or the top-level partnerData
-  const metrics = partnerData.metrics || {
-    totalPlayers: partnerData.totalPlayers || 0,
-    totalRevenue: partnerData.totalRevenue || 0,
-    activeLobbies: partnerData.activeLobbies || 0,
-    totalLobbies: partnerData.totalLobbies || 0,
-    monthlyRevenue: partnerData.monthlyRevenue || 0,
-    balance: partnerData.balance || 0,
-    totalMatches: partnerData.totalMatches || 0,
-    revenueShare: partnerData.revenueShare || 0,
+export function AnalyticsTabNew({ partnerData, lobbies }: AnalyticsTabNewProps) {
+  // Consolidate metrics
+  const metrics = partnerData?.metrics || {
+    totalPlayers: partnerData?.totalPlayers || 0,
+    totalRevenue: partnerData?.totalRevenue || 0,
+    activeLobbies: partnerData?.activeLobbies || 0,
+    totalLobbies: partnerData?.totalLobbies || 0,
+    monthlyRevenue: partnerData?.monthlyRevenue || 0,
+    balance: partnerData?.balance || 0,
+    totalMatches: partnerData?.totalMatches || 0,
   }
 
-  // Generate mock growth data based on real metrics
-  const playerGrowthData = [
-    Math.max(0, (metrics?.totalPlayers || 0) - 15),
-    Math.max(0, (metrics?.totalPlayers || 0) - 12),
-    Math.max(0, (metrics?.totalPlayers || 0) - 9),
-    Math.max(0, (metrics?.totalPlayers || 0) - 6),
-    Math.max(0, (metrics?.totalPlayers || 0) - 3),
-    (metrics?.totalPlayers || 0)
-  ]
+  // Process Real Data from Lobbies
+  const { chartData, totalPlayerGrowth, totalRevenueGrowth } = useMemo(() => {
+    const today = new Date()
+    const last6Months = Array.from({ length: 6 }).map((_, i) => {
+      const date = subMonths(today, 5 - i)
+      return {
+        date,
+        name: format(date, 'MMM'),
+        monthStart: startOfMonth(date),
+        monthEnd: endOfMonth(date)
+      }
+    })
 
-  const revenueGrowthData = [
-    Math.max(0, (metrics?.monthlyRevenue || 0) - 80),
-    Math.max(0, (metrics?.monthlyRevenue || 0) - 60),
-    Math.max(0, (metrics?.monthlyRevenue || 0) - 40),
-    Math.max(0, (metrics?.monthlyRevenue || 0) - 20),
-    Math.max(0, (metrics?.monthlyRevenue || 0) - 10),
-    (metrics?.monthlyRevenue || 0)
-  ]
+    const data = last6Months.map(month => {
+      let playersCount = 0
+      let revenueCount = 0
 
-  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun']
+      lobbies.forEach(lobby => {
+        const lobbyDate = lobby.createdAt ? parseISO(lobby.createdAt) : new Date()
+
+        // Check if lobby belongs to this month (for Revenue estimation based on creation)
+        if (isWithinInterval(lobbyDate, { start: month.monthStart, end: month.monthEnd })) {
+          // Calculate Revenue: Entry Fees * Players * Revenue Share
+          const isPaid = lobby.entryFee > 0
+          if (isPaid) {
+            const share = lobby.partnerRevenueShare ? (lobby.partnerRevenueShare / 100) : 0
+            // Use currentPlayers or maxPlayers or actual participants count
+            // Using currentPlayers is safer for active lobbies
+            revenueCount += (lobby.entryFee * lobby.currentPlayers * share)
+          }
+        }
+
+        // Calculate Players (Participants joined in this month)
+        if (lobby.participants && lobby.participants.length > 0) {
+          lobby.participants.forEach(p => {
+            const joinDate = p.joinedAt ? parseISO(p.joinedAt) : lobbyDate
+            if (isWithinInterval(joinDate, { start: month.monthStart, end: month.monthEnd })) {
+              playersCount++
+            }
+          })
+        } else {
+          // Fallback if no participants array but lobby created in this month
+          if (isWithinInterval(lobbyDate, { start: month.monthStart, end: month.monthEnd })) {
+            playersCount += lobby.currentPlayers
+          }
+        }
+      })
+
+      return {
+        name: month.name,
+        players: playersCount,
+        revenue: revenueCount
+      }
+    })
+
+    const totalPlayerGrowth = data[5].players - data[0].players
+    const totalRevenueGrowth = data[5].revenue - data[0].revenue
+
+    return { chartData: data, totalPlayerGrowth, totalRevenueGrowth }
+  }, [lobbies])
+
+  if (!partnerData) return <p>Could not load analytics.</p>
 
   return (
     <div className="space-y-6">
@@ -90,20 +109,50 @@ export async function AnalyticsTabNew({ partnerData }: AnalyticsTabNewProps) {
           <CardHeader>
             <CardTitle className="flex items-center">
               <Users className="mr-2 h-5 w-5 text-blue-500" />
-              Player Growth
+              New Players
             </CardTitle>
-            <CardDescription>New players over the last 6 months</CardDescription>
+            <CardDescription>New players joined over the last 6 months</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="space-y-4">
-              <SimpleChart data={playerGrowthData} color="#3b82f6" title="Player Growth" />
-              <div className="flex justify-between text-sm">
-                <span className="text-muted-foreground">Total Growth</span>
-                <span className="flex items-center text-green-600 font-medium">
-                  <TrendingUp className="mr-1 h-4 w-4" />
-                  +{playerGrowthData[5] - playerGrowthData[0]} players
-                </span>
-              </div>
+            <div className="h-[250px] w-full">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={chartData}>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                  <XAxis
+                    dataKey="name"
+                    stroke="#888888"
+                    fontSize={12}
+                    tickLine={false}
+                    axisLine={false}
+                  />
+                  <YAxis
+                    stroke="#888888"
+                    fontSize={12}
+                    tickLine={false}
+                    axisLine={false}
+                    tickFormatter={(value) => `${value}`}
+                    allowDecimals={false}
+                  />
+                  <Tooltip
+                    cursor={{ fill: 'transparent' }}
+                    contentStyle={{ borderRadius: '8px' }}
+                    formatter={(value: number) => [value, 'Players']}
+                  />
+                  <Bar
+                    dataKey="players"
+                    fill="#3b82f6"
+                    radius={[4, 4, 0, 0]}
+                    name="Players"
+                  />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+            <div className="mt-4 flex justify-between text-sm">
+              <span className="text-muted-foreground">Trend (6m)</span>
+              <span className={`flex items-center font-medium ${totalPlayerGrowth >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                <TrendingUp className={`mr-1 h-4 w-4 ${totalPlayerGrowth < 0 ? 'rotate-180' : ''}`} />
+                {totalPlayerGrowth >= 0 ? '+' : ''}{totalPlayerGrowth} players
+              </span>
             </div>
           </CardContent>
         </Card>
@@ -112,20 +161,49 @@ export async function AnalyticsTabNew({ partnerData }: AnalyticsTabNewProps) {
           <CardHeader>
             <CardTitle className="flex items-center">
               <DollarSign className="mr-2 h-5 w-5 text-green-500" />
-              Revenue Growth
+              Estimated Revenue
             </CardTitle>
-            <CardDescription>Monthly revenue over the last 6 months</CardDescription>
+            <CardDescription>Estimated revenue over the last 6 months</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="space-y-4">
-              <SimpleChart data={revenueGrowthData} color="#10b981" title="Revenue Growth" />
-              <div className="flex justify-between text-sm">
-                <span className="text-muted-foreground">Total Growth</span>
-                <span className="flex items-center text-green-600 font-medium">
-                  <TrendingUp className="mr-1 h-4 w-4" />
-                  +${revenueGrowthData[5] - revenueGrowthData[0]}
-                </span>
-              </div>
+            <div className="h-[250px] w-full">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={chartData}>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                  <XAxis
+                    dataKey="name"
+                    stroke="#888888"
+                    fontSize={12}
+                    tickLine={false}
+                    axisLine={false}
+                  />
+                  <YAxis
+                    stroke="#888888"
+                    fontSize={12}
+                    tickLine={false}
+                    axisLine={false}
+                    tickFormatter={(value) => `$${value}`}
+                  />
+                  <Tooltip
+                    cursor={{ fill: 'transparent' }}
+                    formatter={(value: number) => [`$${value.toLocaleString()}`, 'Revenue']}
+                    contentStyle={{ borderRadius: '8px' }}
+                  />
+                  <Bar
+                    dataKey="revenue"
+                    fill="#10b981"
+                    radius={[4, 4, 0, 0]}
+                    name="Revenue"
+                  />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+            <div className="mt-4 flex justify-between text-sm">
+              <span className="text-muted-foreground">Trend (6m)</span>
+              <span className={`flex items-center font-medium ${totalRevenueGrowth >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                <TrendingUp className={`mr-1 h-4 w-4 ${totalRevenueGrowth < 0 ? 'rotate-180' : ''}`} />
+                {totalRevenueGrowth >= 0 ? '+' : ''}${totalRevenueGrowth.toLocaleString()}
+              </span>
             </div>
           </CardContent>
         </Card>
@@ -148,7 +226,7 @@ export async function AnalyticsTabNew({ partnerData }: AnalyticsTabNewProps) {
               </div>
               <div className="flex items-center text-sm">
                 <div className="w-2 h-2 bg-green-500 rounded-full mr-2"></div>
-                <span className="text-green-600">Active this month</span>
+                <span className="text-green-600">Active</span>
               </div>
             </div>
           </CardContent>
@@ -169,7 +247,7 @@ export async function AnalyticsTabNew({ partnerData }: AnalyticsTabNewProps) {
               </div>
               <div className="flex items-center text-sm">
                 <TrendingUp className="mr-1 h-4 w-4 text-green-500" />
-                <span className="text-green-600">+12% from last month</span>
+                <span className="text-green-600">Current Month</span>
               </div>
             </div>
           </CardContent>
@@ -217,10 +295,6 @@ export async function AnalyticsTabNew({ partnerData }: AnalyticsTabNewProps) {
                   <span className="font-medium text-green-600">
                     {(metrics?.totalLobbies || 0) > 0 ? Math.round(((metrics?.activeLobbies || 0) / (metrics?.totalLobbies || 0)) * 100) : 0}%
                   </span>
-                </div>
-                <div className="flex justify-between text-sm">
-                  <span>Revenue Share</span>
-                  <span className="font-medium">{metrics?.revenueShare || 0}%</span>
                 </div>
               </div>
             </div>

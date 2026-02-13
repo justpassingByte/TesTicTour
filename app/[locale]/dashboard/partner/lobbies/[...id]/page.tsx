@@ -46,6 +46,7 @@ export default function CreateOrEditLobbyPage() {
     autoStart: true,
     privateMode: false,
     skillLevel: "all",
+    partnerRevenueShare: 0.2,
   })
 
   const [selectedTags, setSelectedTags] = useState<string[]>([])
@@ -58,9 +59,12 @@ export default function CreateOrEditLobbyPage() {
     if (isEditMode && lobbyId) {
       const fetchLobbyData = async () => {
         try {
+          console.log('[EditLobby] Fetching lobby:', lobbyId);
           const response = await api.get<{ success: boolean; data: MiniTourLobby }>(`/minitour-lobbies/${lobbyId}`)
+          console.log('[EditLobby] Response:', response.data);
           const existingLobby = response.data.data
           if (existingLobby) {
+            console.log('[EditLobby] Existing lobby data:', existingLobby);
             setLobbyData({
               name: existingLobby.name,
               description: existingLobby.description || "",
@@ -74,7 +78,10 @@ export default function CreateOrEditLobbyPage() {
               autoStart: existingLobby.settings?.autoStart ?? true,
               privateMode: existingLobby.settings?.privateMode ?? false,
               skillLevel: existingLobby.skillLevel,
+              partnerRevenueShare: existingLobby.partnerRevenueShare ?? 0.2,
             })
+            // Log the set data for verification
+            console.log('[EditLobby] Set partnerRevenueShare to:', existingLobby.partnerRevenueShare ?? 0.2);
             setSelectedTags(existingLobby.tags || [])
             if (existingLobby.customLogoUrl) {
               const fullImageUrl = existingLobby.customLogoUrl.startsWith("http")
@@ -400,6 +407,20 @@ export default function CreateOrEditLobbyPage() {
                         onChange={(e) => setLobbyData({ ...lobbyData, entryFee: Number.parseInt(e.target.value) || 0 })}
                         disabled={lobbyData.entryType === "free"}
                       />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="partnerRevenueShare">Partner Share (%)</Label>
+                      <Input
+                        id="partnerRevenueShare"
+                        type="number"
+                        placeholder="20"
+                        min="0"
+                        max="100"
+                        value={Math.round((lobbyData.partnerRevenueShare || 0) * 100)}
+                        onChange={(e) => setLobbyData({ ...lobbyData, partnerRevenueShare: (parseFloat(e.target.value) || 0) / 100 })}
+                        disabled={lobbyData.entryType === "free"}
+                      />
+                      <p className="text-xs text-muted-foreground">Percentage of entry fees you keep.</p>
                     </div>
                   </div>
 

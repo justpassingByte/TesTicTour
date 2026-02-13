@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Crown, Users, DollarSign, CheckCircle, XCircle, TrendingUp, Calendar, Settings, CreditCard, ArrowUpCircle, ArrowDownCircle, Wallet } from "lucide-react"
+import api from "@/app/lib/apiConfig"
 
 interface PartnerSubscription {
   id: string
@@ -76,27 +77,25 @@ const PLAN_FEATURES = {
   }
 }
 
-export default function SubscriptionTab() {
+export default function SubscriptionTab({ partnerId }: { partnerId?: string }) {
   const [subscription, setSubscription] = useState<PartnerSubscription | null>(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     fetchSubscription()
-  }, [])
+  }, [partnerId])
 
   const fetchSubscription = async () => {
     try {
-      const response = await fetch('/api/partner/subscription', {
-        method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
-          'Content-Type': 'application/json',
-        },
-      })
-      
-      if (response.ok) {
-        const data = await response.json()
-        setSubscription(data.data)
+      let url = '/partner/subscription';
+      if (partnerId) {
+        url += `?targetPartnerId=${partnerId}`;
+      }
+
+      const response = await api.get(url)
+
+      if (response.data && response.data.data) {
+        setSubscription(response.data.data)
       } else {
         console.error('Failed to fetch subscription')
       }
@@ -177,7 +176,7 @@ export default function SubscriptionTab() {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h1 className="text-3xl font-bold">My Subscription</h1>
-        <Button 
+        <Button
           onClick={() => alert('Contact support to manage your subscription')}
           variant="outline"
         >
@@ -217,9 +216,9 @@ export default function SubscriptionTab() {
                     <div>
                       <h3 className="text-2xl font-bold">{subscription.plan}</h3>
                       <p className="text-sm text-muted-foreground">
-                        {subscription.plan === 'FREE' ? 'Basic Plan' : 
-                         subscription.plan === 'PRO' ? 'Professional Plan' : 
-                         'Enterprise Plan'}
+                        {subscription.plan === 'FREE' ? 'Basic Plan' :
+                          subscription.plan === 'PRO' ? 'Professional Plan' :
+                            'Enterprise Plan'}
                       </p>
                     </div>
                   </div>
@@ -256,7 +255,7 @@ export default function SubscriptionTab() {
                   const currentValue = currentPlanFeatures[key as keyof typeof PLAN_FEATURES.FREE];
                   const proValue = proFeatures[key as keyof typeof PLAN_FEATURES.PRO];
                   const enterpriseValue = enterpriseFeatures[key as keyof typeof PLAN_FEATURES.ENTERPRISE];
-                  
+
                   return (
                     <div key={key} className="flex items-center justify-between py-2 px-3 rounded-lg bg-muted/30">
                       <div className="flex items-center space-x-3">
@@ -266,7 +265,7 @@ export default function SubscriptionTab() {
                           </span>
                         </div>
                       </div>
-                      
+
                       <div className="flex items-center space-x-4 text-center">
                         {/* Free Plan */}
                         <div className="flex flex-col items-center min-w-[60px]">
@@ -277,11 +276,11 @@ export default function SubscriptionTab() {
                             <XCircle className="h-4 w-4 text-gray-400" />
                           )}
                           <div className="text-xs text-muted-foreground mt-1">
-                            {typeof freeValue === 'number' && freeValue !== -1 ? freeValue : 
-                             typeof freeValue === 'boolean' ? '' : freeValue}
+                            {typeof freeValue === 'number' && freeValue !== -1 ? freeValue :
+                              typeof freeValue === 'boolean' ? '' : freeValue}
                           </div>
                         </div>
-                        
+
                         {/* Pro Plan */}
                         <div className="flex flex-col items-center min-w-[60px]">
                           <div className="text-xs font-medium text-yellow-600 mb-1">Pro</div>
@@ -291,11 +290,11 @@ export default function SubscriptionTab() {
                             <XCircle className="h-4 w-4 text-gray-400" />
                           )}
                           <div className="text-xs text-muted-foreground mt-1">
-                            {typeof proValue === 'number' && proValue !== -1 ? proValue : 
-                             typeof proValue === 'boolean' ? '' : proValue}
+                            {typeof proValue === 'number' && proValue !== -1 ? proValue :
+                              typeof proValue === 'boolean' ? '' : proValue}
                           </div>
                         </div>
-                        
+
                         {/* Enterprise Plan */}
                         <div className="flex flex-col items-center min-w-[60px]">
                           <div className="text-xs font-medium text-purple-600 mb-1">Enterprise</div>
@@ -305,11 +304,11 @@ export default function SubscriptionTab() {
                             <XCircle className="h-4 w-4 text-gray-400" />
                           )}
                           <div className="text-xs text-muted-foreground mt-1">
-                            {typeof enterpriseValue === 'number' && enterpriseValue === -1 ? '∞' : 
-                             typeof enterpriseValue === 'boolean' ? '' : enterpriseValue}
+                            {typeof enterpriseValue === 'number' && enterpriseValue === -1 ? '∞' :
+                              typeof enterpriseValue === 'boolean' ? '' : enterpriseValue}
                           </div>
                         </div>
-                        
+
                         {/* Current Plan Indicator */}
                         <div className="flex flex-col items-center min-w-[80px]">
                           <div className="text-xs font-medium text-blue-600 mb-1">You</div>
@@ -326,7 +325,7 @@ export default function SubscriptionTab() {
                   );
                 })}
               </div>
-              
+
               {/* Additional Pro/Enterprise Features */}
               <div className="mt-4 pt-4 border-t">
                 <div className="text-sm font-medium mb-3 text-yellow-600">Pro Plan Additional Features:</div>
@@ -364,7 +363,7 @@ export default function SubscriptionTab() {
                     <span>Withdrawal Management</span>
                   </div>
                 </div>
-                
+
                 <div className="text-sm font-medium mb-3 mt-4 text-purple-600">Enterprise Plan Additional Features:</div>
                 <div className="grid grid-cols-2 gap-2 text-xs">
                   <div className="flex items-center space-x-2">
@@ -431,7 +430,7 @@ export default function SubscriptionTab() {
                   <div className="text-xs text-muted-foreground">Lobbies</div>
                 </div>
               </div>
-              
+
               {/* Plan Summary */}
               <div className="mt-4 p-3 rounded-lg bg-primary/5 border border-primary/20">
                 <div className="text-sm font-medium mb-2">What's included in your plan:</div>
@@ -440,7 +439,7 @@ export default function SubscriptionTab() {
                     const currentPlanFeatures = PLAN_FEATURES[subscription.plan as keyof typeof PLAN_FEATURES] || PLAN_FEATURES.FREE;
                     const currentValue = currentPlanFeatures[key as keyof typeof PLAN_FEATURES.FREE];
                     const isIncluded = currentValue !== false && currentValue !== 0;
-                    
+
                     return (
                       <div key={key} className="flex items-center space-x-1 text-xs">
                         {isIncluded ? (
@@ -475,7 +474,7 @@ export default function SubscriptionTab() {
                         Get advanced analytics, custom branding, API access, and more
                       </p>
                       <div className="text-2xl font-bold mb-2">$29.99<span className="text-lg font-normal">/month</span></div>
-                      <Button 
+                      <Button
                         onClick={() => handleUpgradePlan('PRO')}
                         className="w-full"
                       >
@@ -492,7 +491,7 @@ export default function SubscriptionTab() {
                         Get white-label solution, custom integrations, dedicated support, and unlimited resources
                       </p>
                       <div className="text-2xl font-bold mb-2">$99.99<span className="text-lg font-normal">/month</span></div>
-                      <Button 
+                      <Button
                         onClick={() => handleUpgradePlan('ENTERPRISE')}
                         className="w-full"
                       >

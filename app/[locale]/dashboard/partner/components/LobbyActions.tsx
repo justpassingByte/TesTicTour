@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { AssignPlayersDialog } from "./AssignPlayersDialog"
 import { useState } from "react"
+import MiniTourLobbyService from "@/app/services/MiniTourLobbyService"
 
 export function LobbyActions({ lobby, onLobbiesUpdate }: { lobby: MiniTourLobby; onLobbiesUpdate?: (lobbies: MiniTourLobby[]) => void }) {
   const router = useRouter()
@@ -26,9 +27,7 @@ export function LobbyActions({ lobby, onLobbiesUpdate }: { lobby: MiniTourLobby;
     if (window.confirm("Are you sure you want to delete this lobby? This action cannot be undone.")) {
       try {
         await deleteLobby(lobby.id, router, onLobbiesUpdate)
-        // Success toast can be shown here or handled globally if the store does it
       } catch (error) {
-        // Error toast is likely handled by the store, but you could add one here as a fallback
         console.error("Failed to delete lobby from component:", error)
       }
     }
@@ -63,7 +62,17 @@ export function LobbyActions({ lobby, onLobbiesUpdate }: { lobby: MiniTourLobby;
         lobbyId={lobby.id}
         isOpen={isAssignPlayersDialogOpen}
         onOpenChange={setIsAssignPlayersDialogOpen}
+        onSuccess={async () => {
+          if (onLobbiesUpdate) {
+            try {
+              const updatedLobbies = await MiniTourLobbyService.getAllLobbies()
+              onLobbiesUpdate(updatedLobbies)
+            } catch (error) {
+              console.error("Failed to refresh lobbies after assignment:", error)
+            }
+          }
+        }}
       />
     </>
   )
-} 
+}

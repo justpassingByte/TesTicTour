@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -10,7 +10,7 @@ import { Input } from "@/components/ui/input"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Download, Users, Edit, Trash2, Upload, Plus, DollarSign, X, Calendar, Trophy, Target, TrendingUp, CreditCard, ArrowUpRight, ArrowDownRight, Wallet, History, Loader2, ChevronDown } from "lucide-react"
+import { Download, Users, Edit, Trash2, Upload, Plus, DollarSign, X, Calendar, Trophy, Target, TrendingUp, CreditCard, ArrowUpRight, ArrowDownRight, Wallet, History, Loader2, ChevronDown, Search, Filter, ArrowUpDown } from "lucide-react"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -111,9 +111,10 @@ interface PlayersTabClientProps {
   currentBalance?: number
   totalRevenue?: number
   onPlayersUpdate?: () => void
+  partnerId?: string
 }
 
-export default function PlayersTabClient({ players: initialPlayers, currentBalance = 0, totalRevenue = 0, onPlayersUpdate }: PlayersTabClientProps) {
+export default function PlayersTabClient({ players: initialPlayers, currentBalance = 0, totalRevenue = 0, onPlayersUpdate, partnerId }: PlayersTabClientProps) {
   const router = useRouter()
   const [localPlayers, setLocalPlayers] = useState<PartnerPlayer[]>(initialPlayers)
   const [openAddModal, setOpenAddModal] = useState(false)
@@ -125,8 +126,23 @@ export default function PlayersTabClient({ players: initialPlayers, currentBalan
   const [playerDetail, setPlayerDetail] = useState<PlayerDetail | null>(null)
   const [detailLoading, setDetailLoading] = useState(false)
   const [isEditing, setIsEditing] = useState(false)
+  const [searchQuery, setSearchQuery] = useState("")
+  const [sortBy, setSortBy] = useState<string>("username")
+  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc")
+  const [filterStatus, setFilterStatus] = useState<string>("all")
+
+  // Sync with prop from parent
+  useEffect(() => {
+    setLocalPlayers(initialPlayers)
+  }, [initialPlayers])
 
   const refreshPlayers = async () => {
+    // If viewing as admin (partnerId is present), rely on parent update or just don't fetch from partner endpoint
+    if (partnerId) {
+      if (onPlayersUpdate) onPlayersUpdate();
+      return;
+    }
+
     try {
       const response = await api.get('/partner/players')
       if (response.data?.data) {
@@ -147,7 +163,14 @@ export default function PlayersTabClient({ players: initialPlayers, currentBalan
     setPlayerDetail(null)
 
     try {
-      const response = await api.get(`/partner/players/${player.id}`)
+      let url = `/partner/players/${player.id}`;
+      // In admin context, pass targetPartnerId so the backend knows which partner context to use
+      if (partnerId) {
+        url += `?targetPartnerId=${partnerId}`;
+      }
+
+      const response = await api.get(url);
+
       if (response.data?.data) {
         setPlayerDetail(response.data.data)
       }
@@ -377,39 +400,89 @@ export default function PlayersTabClient({ players: initialPlayers, currentBalan
           </span>
           <Badge variant="secondary">All Active</Badge>
 
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleImportCSV}
-          >
-            <Upload className="mr-2 h-4 w-4" />
-            Import CSV
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleExportCSV}
-          >
-            <Download className="mr-2 h-4 w-4" />
-            Export CSV
-          </Button>
-          <Button
-            variant="default"
-            size="sm"
-            onClick={() => setOpenAddModal(true)}
-          >
-            <Plus className="mr-2 h-4 w-4" />
-            Add Player
-          </Button>
+          {!partnerId && (
+            <>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleImportCSV}
+              >
+                <Upload className="mr-2 h-4 w-4" />
+                Import CSV
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleExportCSV}
+              >
+                <Download className="mr-2 h-4 w-4" />
+                Export CSV
+              </Button>
+              <Button
+                variant="default"
+                size="sm"
+                onClick={() => setOpenAddModal(true)}
+              >
+                <Plus className="mr-2 h-4 w-4" />
+                Add Player
+              </Button>
+            </>
+          )}
         </div>
       </div>
 
       <Card>
-        <CardHeader>
+        <CardHeader className="flex flex-row items-center justify-between space-y-0">
           <CardTitle className="flex items-center">
             <Users className="mr-2 h-5 w-5" />
             Player List
           </CardTitle>
+          <div className="flex items-center space-x-2">
+            <div className="relative w-64">
+              <Input
+                placeholder="Search players..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-8"
+              />
+              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+            </div>
+
+            <Select value={filterStatus} onValueChange={setFilterStatus}>
+              <SelectTrigger className="w-[140px]">
+                <Filter className="mr-2 h-4 w-4" />
+                <SelectValue placeholder="Filter" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Players</SelectItem>
+                <SelectItem value="played">Has Played</SelectItem>
+                <SelectItem value="never">Never Played</SelectItem>
+              </SelectContent>
+            </Select>
+
+            <div className="flex items-center border rounded-md">
+              <Select value={sortBy} onValueChange={setSortBy}>
+                <SelectTrigger className="w-[140px] border-none shadow-none focus:ring-0">
+                  <ArrowUpDown className="mr-2 h-4 w-4" />
+                  <SelectValue placeholder="Sort by" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="username">Username</SelectItem>
+                  <SelectItem value="points">Total Points</SelectItem>
+                  <SelectItem value="lobbies">Lobbies</SelectItem>
+                  <SelectItem value="lastPlayed">Last Played</SelectItem>
+                </SelectContent>
+              </Select>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="px-2"
+                onClick={() => setSortOrder(sortOrder === "asc" ? "desc" : "asc")}
+              >
+                {sortOrder === "asc" ? "ASC" : "DESC"}
+              </Button>
+            </div>
+          </div>
         </CardHeader>
         <CardContent>
           <Table>
@@ -423,42 +496,70 @@ export default function PlayersTabClient({ players: initialPlayers, currentBalan
               </TableRow>
             </TableHeader>
             <TableBody>
-              {localPlayers.map((player) => (
-                <TableRow key={player.id}>
-                  <TableCell>
-                    <div className="flex items-center space-x-3">
-                      <Avatar>
-                        <AvatarImage src={`/placeholder.svg`} />
-                        <AvatarFallback>
-                          {player.username ? player.username.slice(0, 2).toUpperCase() : 'PL'}
-                        </AvatarFallback>
-                      </Avatar>
-                      <div>
-                        <div
-                          className="font-medium cursor-pointer hover:text-primary transition-colors"
-                          onClick={() => handleViewPlayer(player)}
-                        >
-                          {player.username || 'Unknown'}
-                        </div>
-                        <div className="text-sm text-muted-foreground">
-                          {player.riotGameName && player.riotGameTag
-                            ? `${player.riotGameName}#${player.riotGameTag}`
-                            : 'N/A'
-                          }
+              {localPlayers
+                .filter(player => {
+                  const matchesSearch =
+                    player.username?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                    player.email?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                    player.riotGameName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                    player.riotGameTag?.toLowerCase().includes(searchQuery.toLowerCase());
+
+                  if (filterStatus === "played") return matchesSearch && (player.lobbiesPlayed || 0) > 0;
+                  if (filterStatus === "never") return matchesSearch && (player.lobbiesPlayed || 0) === 0;
+
+                  return matchesSearch;
+                })
+                .sort((a, b) => {
+                  let comparison = 0;
+                  if (sortBy === "username") {
+                    comparison = (a.username || "").localeCompare(b.username || "");
+                  } else if (sortBy === "points") {
+                    comparison = (a.totalPoints || 0) - (b.totalPoints || 0);
+                  } else if (sortBy === "lobbies") {
+                    comparison = (a.lobbiesPlayed || 0) - (b.lobbiesPlayed || 0);
+                  } else if (sortBy === "lastPlayed") {
+                    const dateA = a.lastPlayed ? new Date(a.lastPlayed).getTime() : 0;
+                    const dateB = b.lastPlayed ? new Date(b.lastPlayed).getTime() : 0;
+                    comparison = dateA - dateB;
+                  }
+                  return sortOrder === "asc" ? comparison : -comparison;
+                })
+                .map((player) => (
+                  <TableRow key={player.id}>
+                    <TableCell>
+                      <div className="flex items-center space-x-3">
+                        <Avatar>
+                          <AvatarImage src={`/placeholder.svg`} />
+                          <AvatarFallback>
+                            {player.username ? player.username.slice(0, 2).toUpperCase() : 'PL'}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div>
+                          <div
+                            className="font-medium cursor-pointer hover:text-primary transition-colors"
+                            onClick={() => handleViewPlayer(player)}
+                          >
+                            {player.username || 'Unknown'}
+                          </div>
+                          <div className="text-sm text-muted-foreground">
+                            {player.riotGameName && player.riotGameTag
+                              ? `${player.riotGameName}#${player.riotGameTag}`
+                              : 'N/A'
+                            }
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  </TableCell>
-                  <TableCell>{player.email || 'N/A'}</TableCell>
-                  <TableCell>
-                    <span className="font-medium">{player.totalPoints || 0}</span>
-                  </TableCell>
-                  <TableCell>{player.lobbiesPlayed || 0}</TableCell>
-                  <TableCell>
-                    {player.lastPlayed ? new Date(player.lastPlayed).toLocaleDateString() : 'N/A'}
-                  </TableCell>
-                </TableRow>
-              ))}
+                    </TableCell>
+                    <TableCell>{player.email || 'N/A'}</TableCell>
+                    <TableCell>
+                      <span className="font-medium">{player.totalPoints || 0}</span>
+                    </TableCell>
+                    <TableCell>{player.lobbiesPlayed || 0}</TableCell>
+                    <TableCell>
+                      {player.lastPlayed ? new Date(player.lastPlayed).toLocaleDateString() : 'N/A'}
+                    </TableCell>
+                  </TableRow>
+                ))}
             </TableBody>
           </Table>
         </CardContent>
@@ -862,7 +963,7 @@ export default function PlayersTabClient({ players: initialPlayers, currentBalan
                                 <div className="text-right">
                                   <span className={`text-lg font-bold ${isPositive ? 'text-emerald-400' : 'text-rose-400'
                                     }`}>
-                                    {isPositive ? '+' : '-'}${transaction.amount.toFixed(2)}
+                                    {isPositive ? '+' : '-'}${Math.abs(transaction.amount).toFixed(2)}
                                   </span>
                                 </div>
                               </div>

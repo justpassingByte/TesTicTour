@@ -34,8 +34,8 @@ interface PlayerDetails {
   eliminated: boolean;
   scoreTotal: number;
   joinedAt: string;
-  stats: PlayerStats; 
-  level?: number;  
+  stats: PlayerStats;
+  level?: number;
 }
 
 export interface PlayerTournamentDisplay {
@@ -75,7 +75,8 @@ interface PlayerState {
   fetchPlayerTournaments: (playerId: string) => Promise<void>;
   fetchPlayerMatchesSummary: (playerId: string) => Promise<void>;
   fetchPlayerMatchResults: (matchId: string) => Promise<void>;
-  fetchAllPlayers: (searchTerm?: string, referrer?: string) => Promise<void>; // Updated: Action to fetch all players with optional referrer
+  fetchAllPlayers: (searchTerm?: string, referrer?: string) => Promise<void>;
+  fetchPartnerPlayers: () => Promise<void>; // New: Action to fetch partner-specific players
 }
 
 export const usePlayerStore = create<PlayerState>((set, get) => ({
@@ -96,14 +97,14 @@ export const usePlayerStore = create<PlayerState>((set, get) => ({
   isLoading: true,
   error: null,
   allPlayers: [], // Initialize new state
-  
+
   fetchPlayer: async (playerId: string) => {
     try {
       set({ isLoading: true, error: null });
       const playerDetails = await PlayerService.getPlayerDetails(playerId);
       set({
         player: playerDetails,
-        
+
         stats: playerDetails.stats // Directly set stats from playerDetails
       });
     } catch (error) {
@@ -138,10 +139,10 @@ export const usePlayerStore = create<PlayerState>((set, get) => ({
   fetchPlayerTournaments: async (playerId: string) => {
     try {
       set({ isLoading: true, error: null });
-      
+
       const response = await PlayerService.getPlayerTournamentHistory(playerId, 50); // Fetch up to 50 tournaments
       const summaries = response.data;
-      
+
       const playerTournaments: PlayerTournamentDisplay[] = summaries.map(summary => ({
         id: summary.tournamentId,
         name: summary.tournament.name,
@@ -154,7 +155,7 @@ export const usePlayerStore = create<PlayerState>((set, get) => ({
         eliminated: summary.eliminated,
         joinedAt: summary.joinedAt,
       }));
-      
+
       set({ playerTournaments });
     } catch (error) {
       set({ error: 'Failed to fetch player tournaments' });
@@ -166,10 +167,10 @@ export const usePlayerStore = create<PlayerState>((set, get) => ({
   fetchPlayerMatchesSummary: async (playerId: string) => {
     try {
       set({ isLoading: true, error: null });
-      
+
       const response = await PlayerService.getPlayerMatchSummaries(playerId, 10); // Fetch up to 10 matches
       const summaries = response.data;
-      
+
       const playerMatches: PlayerMatchDisplay[] = summaries.map(summary => ({
         id: summary.matchId,
         tournamentId: summary.tournamentId,
@@ -181,7 +182,7 @@ export const usePlayerStore = create<PlayerState>((set, get) => ({
         date: new Date(summary.playedAt).toLocaleDateString(),
         userId: summary.userId,
       }));
-      
+
       set({ playerMatches });
     } catch (error) {
       set({ error: 'Failed to fetch player matches' });
@@ -208,5 +209,16 @@ export const usePlayerStore = create<PlayerState>((set, get) => ({
     }
   },
 
-  // Removed calculateStats - now handled by backend
-})); 
+  fetchPartnerPlayers: async () => {
+    set({ isLoading: true, error: null });
+    try {
+      const players = await PartnerService.getPartnerPlayers();
+      set({ allPlayers: players });
+    } catch (error) {
+      console.error("Failed to fetch partner players:", error);
+      set({ error: "Failed to fetch partner players data" });
+    } finally {
+      set({ isLoading: false });
+    }
+  },
+}));

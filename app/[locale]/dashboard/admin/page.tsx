@@ -1,11 +1,14 @@
 "use client"
+import { useState, useEffect } from "react"
 import Link from "next/link"
 import dynamic from "next/dynamic"
-import { Plus, Settings, Users, Trophy, BarChart3, Gamepad2, Gift } from "lucide-react"
+import { Plus, Settings, Users, Trophy, Gamepad2, Gift, DollarSign, Handshake } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { SyncStatus } from "@/components/sync-status"
+import { Badge } from "@/components/ui/badge"
+import api from "@/app/lib/apiConfig"
 
 const LoadingSpinner = () => <div className="text-center py-8">Loading...</div>;
 
@@ -15,15 +18,46 @@ const MinitourManagementTab = dynamic(() => import('./components/MinitourManagem
 const RewardManagementTab = dynamic(() => import('./components/RewardManagementTab'), { loading: LoadingSpinner });
 const SettingsTab = dynamic(() => import('./components/SettingsTab'), { loading: LoadingSpinner });
 
-// Mock data for summary cards - in a real app, this would be fetched
-const summaryData = {
-  totalTournaments: 4,
-  activeTournaments: 1,
-  upcomingTournaments: 2,
-  totalPlayers: 240
+interface AdminStats {
+  totalUsers: number;
+  totalPartners: number;
+  totalPlayers: number;
+  totalLobbies: number;
+  totalTournaments: number;
+  activeTournaments: number;
+  totalMatches: number;
+  totalRevenue: number;
+  monthlyRevenue: number;
+  subscriptionPlans: {
+    FREE: number;
+    PRO: number;
+    ENTERPRISE: number;
+  };
+  lobbyStatuses: {
+    WAITING: number;
+    IN_PROGRESS: number;
+    COMPLETED: number;
+  };
 }
 
 export default function AdminDashboardPage() {
+  const [stats, setStats] = useState<AdminStats | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        const res = await api.get('/admin/stats');
+        setStats(res.data.data);
+      } catch (error) {
+        console.error('Failed to fetch admin stats:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchStats();
+  }, []);
+
   return (
     <div className="container py-10 space-y-8">
       <div className="flex flex-col space-y-2 md:flex-row md:items-center md:justify-between md:space-y-0">
@@ -38,57 +72,88 @@ export default function AdminDashboardPage() {
               New Tournament
             </Link>
           </Button>
-          <SyncStatus status="idle" />
+          <SyncStatus status={loading ? "syncing" : "live"} />
         </div>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <Card className="bg-card/60 dark:bg-card/40 backdrop-blur-lg border border-white/20">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Tournaments</CardTitle>
-            <Trophy className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{summaryData.totalTournaments}</div>
-            <p className="text-xs text-muted-foreground">+1 from last month</p>
-          </CardContent>
-        </Card>
-        <Card className="bg-card/60 dark:bg-card/40 backdrop-blur-lg border border-white/20">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Active Tournaments</CardTitle>
-            <BarChart3 className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{summaryData.activeTournaments}</div>
-            <p className="text-xs text-muted-foreground">
-              {summaryData.upcomingTournaments} upcoming
-            </p>
-          </CardContent>
-        </Card>
-        <Card className="bg-card/60 dark:bg-card/40 backdrop-blur-lg border border-white/20">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Users</CardTitle>
-            <Users className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{summaryData.totalPlayers}</div>
-            <p className="text-xs text-muted-foreground">Across all tournaments</p>
-          </CardContent>
-        </Card>
-        <Card className="bg-card/60 dark:bg-card/40 backdrop-blur-lg border border-white/20">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">API Status</CardTitle>
-            <Settings className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="flex items-center">
-              <div className="h-2 w-2 rounded-full bg-advanced mr-2" />
-              <div className="text-sm font-medium">Operational</div>
-            </div>
-            <p className="text-xs text-muted-foreground">Last checked 5 minutes ago</p>
-          </CardContent>
-        </Card>
-      </div>
+      {loading ? (
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+          {[...Array(8)].map((_, i) => (
+            <Card key={i} className="bg-card/60 dark:bg-card/40 backdrop-blur-lg border border-white/20 animate-pulse">
+              <CardHeader className="pb-2"><div className="h-4 w-24 bg-muted rounded" /></CardHeader>
+              <CardContent><div className="h-8 w-16 bg-muted rounded" /></CardContent>
+            </Card>
+          ))}
+        </div>
+      ) : stats && (
+        <>
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+            <Card className="bg-card/60 dark:bg-card/40 backdrop-blur-lg border border-white/20">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Partners</CardTitle>
+                <Handshake className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{stats.totalPartners}</div>
+                <div className="flex items-center gap-1.5 mt-2">
+                  <Badge variant="outline" className="text-[10px] px-1.5 py-0 bg-slate-500/10 text-slate-400 border-slate-500/20">
+                    {stats.subscriptionPlans.FREE} Free
+                  </Badge>
+                  <Badge variant="outline" className="text-[10px] px-1.5 py-0 bg-blue-500/10 text-blue-500 border-blue-500/20">
+                    {stats.subscriptionPlans.PRO} Pro
+                  </Badge>
+                  <Badge variant="outline" className="text-[10px] px-1.5 py-0 bg-purple-500/10 text-purple-500 border-purple-500/20">
+                    {stats.subscriptionPlans.ENTERPRISE} Ent
+                  </Badge>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="bg-card/60 dark:bg-card/40 backdrop-blur-lg border border-white/20">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Revenue</CardTitle>
+                <DollarSign className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">${stats.totalRevenue.toLocaleString()}</div>
+                <p className="text-xs text-muted-foreground">${stats.monthlyRevenue.toLocaleString()} this month</p>
+              </CardContent>
+            </Card>
+
+            <Card className="bg-card/60 dark:bg-card/40 backdrop-blur-lg border border-white/20">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Users & Lobbies</CardTitle>
+                <Users className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{stats.totalUsers}</div>
+                <div className="flex items-center gap-1.5 mt-2">
+                  <Badge variant="outline" className="text-[10px] px-1.5 py-0 bg-yellow-500/10 text-yellow-500 border-yellow-500/20">
+                    {stats.lobbyStatuses.WAITING} Waiting
+                  </Badge>
+                  <Badge variant="outline" className="text-[10px] px-1.5 py-0 bg-green-500/10 text-green-500 border-green-500/20">
+                    {stats.lobbyStatuses.IN_PROGRESS} Active
+                  </Badge>
+                  <Badge variant="outline" className="text-[10px] px-1.5 py-0 bg-slate-500/10 text-slate-400 border-slate-500/20">
+                    {stats.lobbyStatuses.COMPLETED} Done
+                  </Badge>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="bg-card/60 dark:bg-card/40 backdrop-blur-lg border border-white/20">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Matches</CardTitle>
+                <Trophy className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{stats.totalMatches}</div>
+                <p className="text-xs text-muted-foreground">{stats.totalTournaments} tournaments · {stats.activeTournaments} active</p>
+              </CardContent>
+            </Card>
+          </div>
+        </>
+      )}
 
       <Tabs defaultValue="tournaments" className="space-y-4">
         <TabsList>

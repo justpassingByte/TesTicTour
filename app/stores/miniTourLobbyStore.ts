@@ -27,12 +27,13 @@ export interface MiniTourMatchResult {
   };
   placement: number;
   points: number;
+  prize?: number;
 }
 
 export interface MiniTourMatch {
   id: string;
   miniTourLobbyId: string;
-  status: 'PENDING' | 'COMPLETED' | 'LIVE';
+  status: 'PENDING' | 'COMPLETED' | 'LIVE' | 'SETTLED';
   matchIdRiotApi?: string | null;
   fetchedAt?: string;
   matchData?: any;
@@ -60,6 +61,7 @@ export interface MiniTourLobby {
   totalMatches: number;
   createdAt: string;
   updatedAt: string;
+  partnerRevenueShare: number;
   tags: string[];
   rules: string[];
   prizeDistribution?: any;
@@ -85,6 +87,11 @@ export interface PartnerData {
   totalMatches: number
   revenueShare: number
   subscription?: any
+  lobbyStatuses?: {
+    WAITING: number
+    IN_PROGRESS: number
+    COMPLETED: number
+  }
   metrics?: {
     totalPlayers: number
     totalRevenue: number
@@ -149,6 +156,7 @@ interface MiniTourLobbyActions {
   updateLobby: (lobbyId: string, formData: FormData, router: any) => Promise<void>;
   deleteLobby: (lobbyId: string, router: any, onLobbiesUpdate?: (lobbies: MiniTourLobby[]) => void) => Promise<void>;
   assignPlayerToLobby: (lobbyId: string, userId: string) => Promise<void>;
+  submitManualResult: (lobbyId: string, placements: { userId: string; placement: number }[]) => Promise<void>;
 }
 
 export const useMiniTourLobbyStore = create<MiniTourLobbyState & MiniTourLobbyActions>((set, get) => ({
@@ -284,10 +292,23 @@ export const useMiniTourLobbyStore = create<MiniTourLobbyState & MiniTourLobbyAc
   },
 
   fetchLobby: async (id) => {
+    console.log('[Store] fetchLobby called for ID:', id);
     set({ isLoading: true, error: null });
     try {
       const lobby = await MiniTourLobbyService.getLobbyById(id);
+      console.log('[Store] fetchLobby received lobby data:', {
+        id: lobby?.id,
+        status: lobby?.status,
+        matchCount: lobby?.matches?.length,
+        matches: lobby?.matches?.map(m => ({
+          id: m.id.substring(0, 8),
+          status: m.status,
+          resultCount: m.miniTourMatchResults?.length,
+          fetchedAt: m.fetchedAt
+        }))
+      });
       set({ lobby, isLoading: false });
+      console.log('[Store] fetchLobby - lobby state updated');
     } catch (error) {
       console.error("Failed to fetch lobby:", error);
       const errorMessage = error instanceof Error ? error.message : "Failed to fetch lobby";
@@ -430,6 +451,36 @@ export const useMiniTourLobbyStore = create<MiniTourLobbyState & MiniTourLobbyAc
         description: errorMessage,
         variant: 'destructive',
       });
+    } finally {
+      set({ isProcessingAction: false });
+    }
+  },
+
+  submitManualResult: async (lobbyId: string, placements: { userId: string; placement: number }[]) => {
+    set({ isProcessingAction: true, error: null });
+    try {
+      console.log('[Store] Submitting manual result for lobby:', lobbyId);
+      const updatedLobby = await MiniTourLobbyService.submitManualResult(lobbyId, placements);
+      console.log('[Store] Manual result submitted successfully, updated state from response:', {
+        id: updatedLobby?.id,
+        status: updatedLobby?.status,
+        matchCount: updatedLobby?.matches?.length
+      });
+      set({ lobby: updatedLobby });
+      toast({
+        title: "Success",
+        description: "Match results submitted successfully!",
+      });
+    } catch (error: any) {
+      console.error("Failed to submit manual results:", error);
+      const errorMessage = error.message || "Failed to submit results. Please try again.";
+      set({ error: errorMessage });
+      toast({
+        title: "Error",
+        description: errorMessage,
+        variant: "destructive",
+      });
+      throw error; // Re-throw to let the dialog handle it
     } finally {
       set({ isProcessingAction: false });
     }

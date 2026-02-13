@@ -3,6 +3,7 @@
 import { useState, useEffect, Suspense } from "react"
 import Link from "next/link"
 import { Plus, Settings, DollarSign, Users, Trophy, BarChart3, Coins } from "lucide-react"
+import { Badge } from "@/components/ui/badge"
 
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -10,10 +11,10 @@ import { Skeleton } from "@/components/ui/skeleton"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { SyncStatus } from "@/components/sync-status"
 
-import {
-  PlayerTab,
-  getPlayersData,
-} from "./components/DashboardComponents"
+import SubscriptionTab from "./components/SubscriptionTab"
+
+import api from "@/app/lib/apiConfig"
+import { MiniTourLobby, MiniTourMatch, MiniTourMatchResult, PartnerData, AnalyticsData, Player } from "@/app/stores/miniTourLobbyStore";
 
 import {
   LobbiesTab,
@@ -23,12 +24,6 @@ import {
 import { OverviewTabNew } from "./components/OverviewTabNew"
 import { AnalyticsTabNew } from "./components/AnalyticsTabNew"
 import { PlayersTab } from "./components/PlayersTab"
-import SubscriptionTab from "./components/SubscriptionTab"
-
-import { PartnerData, MiniTourLobby, Player } from "@/app/stores/miniTourLobbyStore"
-
-import api from "@/app/lib/apiConfig"
-import { MiniTourLobby, MiniTourMatch, MiniTourMatchResult, PartnerData, AnalyticsData, Player } from "@/app/stores/miniTourLobbyStore";
 
 // Fallback Skeleton Components
 function TabContentSkeleton() {
@@ -201,7 +196,21 @@ export default function PartnerDashboardPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{summaryData.totalLobbies.toLocaleString()}</div>
-            <p className="text-xs text-muted-foreground">Total active and completed</p>
+            {partnerData?.lobbyStatuses ? (
+              <div className="flex items-center gap-1.5 mt-2">
+                <Badge variant="outline" className="text-[10px] px-1.5 py-0 bg-yellow-500/10 text-yellow-500 border-yellow-500/20">
+                  {partnerData.lobbyStatuses.WAITING} Waiting
+                </Badge>
+                <Badge variant="outline" className="text-[10px] px-1.5 py-0 bg-green-500/10 text-green-500 border-green-500/20">
+                  {partnerData.lobbyStatuses.IN_PROGRESS} Active
+                </Badge>
+                <Badge variant="outline" className="text-[10px] px-1.5 py-0 bg-slate-500/10 text-slate-400 border-slate-500/20">
+                  {partnerData.lobbyStatuses.COMPLETED} Done
+                </Badge>
+              </div>
+            ) : (
+              <p className="text-xs text-muted-foreground">Total active and completed</p>
+            )}
           </CardContent>
         </Card>
       </div>
@@ -226,7 +235,7 @@ export default function PartnerDashboardPage() {
         </TabsContent>
 
         <TabsContent value="analytics" className="space-y-4">
-          <AnalyticsTabNew partnerData={partnerData as any} />
+          <AnalyticsTabNew partnerData={partnerData as any} lobbies={lobbies as any} />
         </TabsContent>
 
         <TabsContent value="team" className="space-y-4">

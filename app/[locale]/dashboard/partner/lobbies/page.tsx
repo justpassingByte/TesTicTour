@@ -44,6 +44,7 @@ export default function CreateOrEditLobbyPage() {
     autoStart: true,
     privateMode: false,
     skillLevel: "all",
+    partnerRevenueShare: 0.2, // Default to 20%
   })
 
   const [selectedTags, setSelectedTags] = useState<string[]>([])
@@ -72,6 +73,7 @@ export default function CreateOrEditLobbyPage() {
               autoStart: existingLobby.settings?.autoStart ?? true,
               privateMode: existingLobby.settings?.privateMode ?? false,
               skillLevel: existingLobby.skillLevel,
+              partnerRevenueShare: existingLobby.partnerRevenueShare ?? 0.2,
             })
             setSelectedTags(existingLobby.tags || [])
             if (existingLobby.customLogoUrl) {
@@ -206,10 +208,10 @@ export default function CreateOrEditLobbyPage() {
             </p>
           </div>
           {isEditMode && (
-             <Button variant="destructive" onClick={handleDelete} disabled={isProcessingAction}>
-                <Trash2 className="mr-2 h-4 w-4" />
-                Delete Lobby
-              </Button>
+            <Button variant="destructive" onClick={handleDelete} disabled={isProcessingAction}>
+              <Trash2 className="mr-2 h-4 w-4" />
+              Delete Lobby
+            </Button>
           )}
         </div>
 
@@ -386,9 +388,23 @@ export default function CreateOrEditLobbyPage() {
                         disabled={lobbyData.entryType === "free"}
                       />
                     </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="partnerRevenueShare">Partner Share (%)</Label>
+                      <Input
+                        id="partnerRevenueShare"
+                        type="number"
+                        placeholder="20"
+                        min="0"
+                        max="100"
+                        value={Math.round((lobbyData.partnerRevenueShare || 0) * 100)}
+                        onChange={(e) => setLobbyData({ ...lobbyData, partnerRevenueShare: (parseFloat(e.target.value) || 0) / 100 })}
+                        disabled={lobbyData.entryType === "free"}
+                      />
+                      <p className="text-xs text-muted-foreground">Percentage of entry fees you keep.</p>
+                    </div>
                   </div>
 
-                  <div className="space-y-2">
+                  <div className="space-y-2 pb-4">
                     <Label htmlFor="prizeDistribution">Prize Distribution</Label>
                     <Select
                       value={lobbyData.prizeDistribution}
@@ -404,6 +420,33 @@ export default function CreateOrEditLobbyPage() {
                         <SelectItem value="custom">Custom</SelectItem>
                       </SelectContent>
                     </Select>
+                  </div>
+
+                  <div className="space-y-4 pt-4 border-t border-muted">
+                    <div className="flex items-center justify-between">
+                      <div className="space-y-0.5">
+                        <Label htmlFor="partnerRevenueShare">Partner Revenue Share (%)</Label>
+                        <p className="text-sm text-muted-foreground">Phần trăm phí bạn nhận được từ mỗi người tham gia</p>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Input
+                          id="partnerRevenueShare"
+                          type="number"
+                          min="0"
+                          max="100"
+                          className="w-24"
+                          value={Math.round(lobbyData.partnerRevenueShare * 100)}
+                          onChange={(e) => {
+                            const val = Math.min(100, Math.max(0, Number(e.target.value)))
+                            setLobbyData({ ...lobbyData, partnerRevenueShare: val / 100 })
+                          }}
+                        />
+                        <span className="text-sm font-medium">%</span>
+                      </div>
+                    </div>
+                    <p className="text-xs text-muted-foreground italic">
+                      * Ví dụ: Nếu phí là 100 coins và share là 20%, bạn nhận 20 coins, prize pool là 80 coins.
+                    </p>
                   </div>
                 </CardContent>
               </Card>
@@ -492,8 +535,8 @@ export default function CreateOrEditLobbyPage() {
                       {imagePreview ? (
                         <div className="relative group">
                           <Image src={imagePreview} alt="Lobby Logo" className="mx-auto max-h-40 rounded-lg" />
-                           <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                             <Button variant="outline" size="sm" type="button" onClick={() => fileInputRef.current?.click()}>
+                          <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                            <Button variant="outline" size="sm" type="button" onClick={() => fileInputRef.current?.click()}>
                               Change Logo
                             </Button>
                           </div>
@@ -585,6 +628,10 @@ export default function CreateOrEditLobbyPage() {
                         <div className="flex justify-between">
                           <span className="text-muted-foreground">Prize Distribution:</span>
                           <span className="capitalize">{lobbyData.prizeDistribution.replace("-", " ")}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground">Revenue Share:</span>
+                          <span>{Math.round(lobbyData.partnerRevenueShare * 100)}%</span>
                         </div>
                         <div className="flex justify-between">
                           <span className="text-muted-foreground">Auto Start:</span>
