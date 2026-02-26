@@ -91,6 +91,7 @@ export default function UserManagementTab() {
           <span className="text-sm text-muted-foreground">
             Total Partners: {filteredUsers.length}
           </span>
+          {/* Disabled per request: Import/Export CSV
           <Button variant="outline" size="sm" onClick={() => setOpenImportModal(true)}>
             <Upload className="mr-2 h-4 w-4" />
             Import CSV
@@ -99,6 +100,7 @@ export default function UserManagementTab() {
             <Download className="mr-2 h-4 w-4" />
             Export CSV
           </Button>
+          */}
           <Button variant="default" size="sm" onClick={() => setOpenAddUser(true)}>
             <Plus className="mr-2 h-4 w-4" />
             Add Partner
@@ -210,10 +212,10 @@ export default function UserManagementTab() {
                         <Badge
                           variant={user.subscriptionPlan === 'ENTERPRISE' ? 'default' : 'secondary'}
                           className={`text-xs ${user.subscriptionPlan === 'PRO'
-                              ? 'bg-blue-500/10 text-blue-500 border-blue-500/20'
-                              : user.subscriptionPlan === 'ENTERPRISE'
-                                ? 'bg-purple-500/10 text-purple-500 border-purple-500/20'
-                                : 'bg-slate-500/10 text-slate-400 border-slate-500/20'
+                            ? 'bg-blue-500/10 text-blue-500 border-blue-500/20'
+                            : user.subscriptionPlan === 'ENTERPRISE'
+                              ? 'bg-purple-500/10 text-purple-500 border-purple-500/20'
+                              : 'bg-slate-500/10 text-slate-400 border-slate-500/20'
                             }`}
                         >
                           {user.subscriptionPlan}

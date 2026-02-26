@@ -11,7 +11,7 @@ import { PartnerData, MiniTourLobby } from "@/app/stores/miniTourLobbyStore";
 import { OverviewTabNew } from "../../partner/components/OverviewTabNew";
 import { LobbiesTab, RevenueTab, SettingsTab } from "../../partner/components/PartnerServerComponents";
 import { AnalyticsTabNew } from "../../partner/components/AnalyticsTabNew";
-import SubscriptionTab from "../../partner/components/SubscriptionTab";
+import AdminPartnerSubscriptionTab from "./AdminPartnerSubscriptionTab";
 import PlayersTabClient from "../../partner/components/PlayersTabClient";
 import PartnerTransactionsTab from "./PartnerTransactionsTab";
 
@@ -127,13 +127,13 @@ export default function PartnerDetailView({ partnerId, onBack }: PartnerDetailVi
                 </TabsContent>
 
                 <TabsContent value="subscription" className="space-y-4">
-                    <Suspense fallback={<div>Loading subscription...</div>}>
-                        {/* Note: SubscriptionTab fetches its own data usually, might need adaptation or it will show Admin's sub */}
-                        {/* If we can't easily pass props to SubscriptionTab, we might render a custom view using data from store */}
-                        <div className="alert alert-info mb-4">
-                            Note: This view shows the UI components. Detailed subscription data from the store is shown below if standard component data differs.
-                        </div>
-                        <SubscriptionTab partnerId={partnerId} />
+                    <Suspense fallback={<div>Loading subscription details...</div>}>
+                        <AdminPartnerSubscriptionTab
+                            partnerId={partnerId}
+                            partnerName={partner.username}
+                            currentSubscription={subscription}
+                            onUpdate={handleRefresh}
+                        />
                     </Suspense>
                 </TabsContent>
 

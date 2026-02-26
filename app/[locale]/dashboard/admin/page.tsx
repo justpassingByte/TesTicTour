@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react"
 import Link from "next/link"
 import dynamic from "next/dynamic"
-import { Plus, Settings, Users, Trophy, Gamepad2, Gift, DollarSign, Handshake } from "lucide-react"
+import { Plus, Settings, Users, Trophy, Gamepad2, Gift, DollarSign, Handshake, TrendingUp } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
@@ -17,6 +17,10 @@ const UserManagementTab = dynamic(() => import('./components/UserManagementTab')
 const MinitourManagementTab = dynamic(() => import('./components/MinitourManagementTab'), { loading: LoadingSpinner });
 const RewardManagementTab = dynamic(() => import('./components/RewardManagementTab'), { loading: LoadingSpinner });
 const SettingsTab = dynamic(() => import('./components/SettingsTab'), { loading: LoadingSpinner });
+
+const AdminOverviewTab = dynamic(() => import('./components/AdminOverviewTab'), { loading: LoadingSpinner });
+const AdminRevenueTab = dynamic(() => import('./components/AdminRevenueTab'), { loading: LoadingSpinner });
+const AdminAnalyticsTab = dynamic(() => import('./components/AdminAnalyticsTab'), { loading: LoadingSpinner });
 
 interface AdminStats {
   totalUsers: number;
@@ -155,14 +159,27 @@ export default function AdminDashboardPage() {
         </>
       )}
 
-      <Tabs defaultValue="tournaments" className="space-y-4">
-        <TabsList>
+      <Tabs defaultValue="overview" className="space-y-4">
+        <TabsList className="overflow-x-auto flex w-full justify-start h-auto no-scrollbar">
+          <TabsTrigger value="overview"><Gamepad2 className="mr-2 h-4 w-4" />Overview</TabsTrigger>
+          <TabsTrigger value="revenue"><DollarSign className="mr-2 h-4 w-4" />Revenue</TabsTrigger>
+          <TabsTrigger value="analytics"><TrendingUp className="mr-2 h-4 w-4" />Analytics</TabsTrigger>
           <TabsTrigger value="tournaments"><Trophy className="mr-2 h-4 w-4" />Tournaments</TabsTrigger>
           <TabsTrigger value="users"><Users className="mr-2 h-4 w-4" />Users</TabsTrigger>
           <TabsTrigger value="minitours"><Gamepad2 className="mr-2 h-4 w-4" />Minitours</TabsTrigger>
           <TabsTrigger value="rewards"><Gift className="mr-2 h-4 w-4" />Rewards</TabsTrigger>
           <TabsTrigger value="settings"><Settings className="mr-2 h-4 w-4" />Settings</TabsTrigger>
         </TabsList>
+
+        <TabsContent value="overview">
+          <AdminOverviewTab stats={stats} />
+        </TabsContent>
+        <TabsContent value="revenue">
+          <AdminRevenueTab stats={stats} />
+        </TabsContent>
+        <TabsContent value="analytics">
+          <AdminAnalyticsTab />
+        </TabsContent>
 
         <TabsContent value="tournaments">
           <TournamentManagementTab />

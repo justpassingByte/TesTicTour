@@ -38,6 +38,7 @@ const TYPE_CONFIG: Record<string, { label: string; color: string; icon: "in" | "
     reward: { label: "Reward", color: "bg-purple-500/10 text-purple-500 border-purple-500/20", icon: "in" },
     revenue_share: { label: "Revenue Share", color: "bg-blue-500/10 text-blue-500 border-blue-500/20", icon: "in" },
     prize: { label: "Prize", color: "bg-emerald-500/10 text-emerald-500 border-emerald-500/20", icon: "out" },
+    subscription_payment: { label: "Subscription Payment", color: "bg-indigo-500/10 text-indigo-500 border-indigo-500/20", icon: "out" },
 };
 
 const STATUS_CONFIG: Record<string, { label: string; color: string }> = {
@@ -68,8 +69,11 @@ export default function PartnerTransactionsTab({ transactions, partnerName }: Pa
         const totalPrizes = successful
             .filter(t => t.type === "prize")
             .reduce((sum, t) => sum + Math.abs(t.amount), 0);
+        const totalSubPayments = successful
+            .filter(t => t.type === "subscription_payment")
+            .reduce((sum, t) => sum + Math.abs(t.amount), 0);
 
-        return { totalDeposits, totalRevenueShare, totalWithdrawals, totalPrizes, total: transactions.length };
+        return { totalDeposits, totalRevenueShare, totalWithdrawals, totalPrizes, totalSubPayments, total: transactions.length };
     }, [transactions]);
 
     // Filtered and sorted transactions
@@ -121,7 +125,7 @@ export default function PartnerTransactionsTab({ transactions, partnerName }: Pa
     return (
         <div className="space-y-6">
             {/* Summary Cards */}
-            <div className="grid gap-4 md:grid-cols-4">
+            <div className="grid gap-4 md:grid-cols-5">
                 <Card className="border-green-500/20 bg-green-500/5">
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                         <CardTitle className="text-sm font-medium text-muted-foreground">Total Deposits</CardTitle>
@@ -159,6 +163,16 @@ export default function PartnerTransactionsTab({ transactions, partnerName }: Pa
                     </CardHeader>
                     <CardContent>
                         <div className="text-2xl font-bold text-purple-500">${stats.totalPrizes.toLocaleString()}</div>
+                    </CardContent>
+                </Card>
+
+                <Card className="border-indigo-500/20 bg-indigo-500/5">
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                        <CardTitle className="text-sm font-medium text-muted-foreground">Sub Payments</CardTitle>
+                        <Receipt className="h-4 w-4 text-indigo-500" />
+                    </CardHeader>
+                    <CardContent>
+                        <div className="text-2xl font-bold text-indigo-500">${stats.totalSubPayments.toLocaleString()}</div>
                     </CardContent>
                 </Card>
             </div>
