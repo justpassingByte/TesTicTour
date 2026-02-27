@@ -15,6 +15,7 @@ import { useTranslations, useLocale } from 'next-intl'
 import { useAuthModalStore } from '@/app/stores/authModalStore'
 import { AuthModal } from '@/components/auth/AuthModal'
 import { useUserStore } from '@/app/stores/userStore';
+import { NotificationBell } from '@/components/NotificationBell';
 
 interface NavItem {
   label: string
@@ -82,11 +83,11 @@ export function MainNav({
       icon: <BarChart3 className="h-5 w-5" />,
     },
     ...(currentUser ? [
-    {
-      href: "/dashboard",
-      label: t("Dashboard"),
-      icon: <LayoutDashboard className="h-5 w-5" />,
-    }
+      {
+        href: "/dashboard",
+        label: t("Dashboard"),
+        icon: <LayoutDashboard className="h-5 w-5" />,
+      }
     ] : []),
   ];
 
@@ -128,6 +129,9 @@ export function MainNav({
         <div className="flex items-center space-x-2">
           <LanguageToggle />
           <ModeToggle />
+
+          {/* Notification bell — only for logged-in users */}
+          {currentUser && <NotificationBell />}
 
           {/* Mobile Menu Button */}
           <Button variant="ghost" size="icon" className="md:hidden" onClick={toggleMenu}>

@@ -79,6 +79,7 @@ const PLAN_FEATURES = {
 
 export default function SubscriptionTab({ partnerId }: { partnerId?: string }) {
   const [subscription, setSubscription] = useState<PartnerSubscription | null>(null)
+  const [availablePlans, setAvailablePlans] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -96,6 +97,9 @@ export default function SubscriptionTab({ partnerId }: { partnerId?: string }) {
 
       if (response.data && response.data.data) {
         setSubscription(response.data.data)
+        if (response.data.availablePlans) {
+          setAvailablePlans(response.data.availablePlans)
+        }
       } else {
         console.error('Failed to fetch subscription')
       }
@@ -171,6 +175,27 @@ export default function SubscriptionTab({ partnerId }: { partnerId?: string }) {
       </div>
     )
   }
+
+  // Merge dynamic DB config over the static PLAN_FEATURES skeleton
+  const ACTIVE_PLAN_FEATURES = (() => {
+    if (!availablePlans || availablePlans.length === 0) return PLAN_FEATURES;
+
+    const merged = JSON.parse(JSON.stringify(PLAN_FEATURES)); // clone
+
+    availablePlans.forEach(plan => {
+      const planKey = plan.plan as keyof typeof merged;
+      if (merged[planKey]) {
+        merged[planKey] = {
+          ...merged[planKey],
+          ...(typeof plan.features === 'object' && plan.features ? plan.features : {}),
+          maxLobbies: plan.maxLobbies,
+          maxPlayers: plan.maxPlayersPerLobby
+        };
+      }
+    });
+
+    return merged as typeof PLAN_FEATURES;
+  })();
 
   return (
     <div className="space-y-6">
@@ -248,13 +273,13 @@ export default function SubscriptionTab({ partnerId }: { partnerId?: string }) {
             </CardHeader>
             <CardContent>
               <div className="space-y-3">
-                {Object.entries(PLAN_FEATURES.FREE).map(([key, freeValue]) => {
-                  const proFeatures = PLAN_FEATURES.PRO;
-                  const enterpriseFeatures = PLAN_FEATURES.ENTERPRISE;
-                  const currentPlanFeatures = PLAN_FEATURES[subscription.plan as keyof typeof PLAN_FEATURES] || PLAN_FEATURES.FREE;
-                  const currentValue = currentPlanFeatures[key as keyof typeof PLAN_FEATURES.FREE];
-                  const proValue = proFeatures[key as keyof typeof PLAN_FEATURES.PRO];
-                  const enterpriseValue = enterpriseFeatures[key as keyof typeof PLAN_FEATURES.ENTERPRISE];
+                {Object.entries(ACTIVE_PLAN_FEATURES.FREE).map(([key, freeValue]) => {
+                  const proFeatures = ACTIVE_PLAN_FEATURES.PRO;
+                  const enterpriseFeatures = ACTIVE_PLAN_FEATURES.ENTERPRISE;
+                  const currentPlanFeatures = ACTIVE_PLAN_FEATURES[subscription.plan as keyof typeof ACTIVE_PLAN_FEATURES] || ACTIVE_PLAN_FEATURES.FREE;
+                  const currentValue = currentPlanFeatures[key as keyof typeof ACTIVE_PLAN_FEATURES.FREE];
+                  const proValue = proFeatures[key as keyof typeof ACTIVE_PLAN_FEATURES.PRO];
+                  const enterpriseValue = enterpriseFeatures[key as keyof typeof ACTIVE_PLAN_FEATURES.ENTERPRISE];
 
                   return (
                     <div key={key} className="flex items-center justify-between py-2 px-3 rounded-lg bg-muted/30">
@@ -419,13 +444,13 @@ export default function SubscriptionTab({ partnerId }: { partnerId?: string }) {
               <div className="grid grid-cols-2 gap-3">
                 <div className="text-center p-3 border rounded-lg bg-muted/20">
                   <div className="text-xl font-bold text-blue-600">
-                    {subscription.features.maxPlayers === -1 ? '∞' : subscription.features.maxPlayers || PLAN_FEATURES.FREE.maxPlayers}
+                    {subscription.features.maxPlayers === -1 ? '∞' : subscription.features.maxPlayers || ACTIVE_PLAN_FEATURES.FREE.maxPlayers}
                   </div>
                   <div className="text-xs text-muted-foreground">Players</div>
                 </div>
                 <div className="text-center p-3 border rounded-lg bg-muted/20">
                   <div className="text-xl font-bold text-green-600">
-                    {subscription.features.maxLobbies === -1 ? '∞' : subscription.features.maxLobbies || PLAN_FEATURES.FREE.maxLobbies}
+                    {subscription.features.maxLobbies === -1 ? '∞' : subscription.features.maxLobbies || ACTIVE_PLAN_FEATURES.FREE.maxLobbies}
                   </div>
                   <div className="text-xs text-muted-foreground">Lobbies</div>
                 </div>
@@ -435,9 +460,9 @@ export default function SubscriptionTab({ partnerId }: { partnerId?: string }) {
               <div className="mt-4 p-3 rounded-lg bg-primary/5 border border-primary/20">
                 <div className="text-sm font-medium mb-2">What's included in your plan:</div>
                 <div className="flex flex-wrap gap-2">
-                  {Object.entries(PLAN_FEATURES.FREE).map(([key, value]) => {
-                    const currentPlanFeatures = PLAN_FEATURES[subscription.plan as keyof typeof PLAN_FEATURES] || PLAN_FEATURES.FREE;
-                    const currentValue = currentPlanFeatures[key as keyof typeof PLAN_FEATURES.FREE];
+                  {Object.entries(ACTIVE_PLAN_FEATURES.FREE).map(([key, value]) => {
+                    const currentPlanFeatures = ACTIVE_PLAN_FEATURES[subscription.plan as keyof typeof ACTIVE_PLAN_FEATURES] || ACTIVE_PLAN_FEATURES.FREE;
+                    const currentValue = currentPlanFeatures[key as keyof typeof ACTIVE_PLAN_FEATURES.FREE];
                     const isIncluded = currentValue !== false && currentValue !== 0;
 
                     return (

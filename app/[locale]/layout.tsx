@@ -10,6 +10,7 @@ import { Footer } from "@/components/footer";
 import { Toaster } from "@/components/ui/toaster";
 import LocaleDebug from './components/LocaleDebug';
 import AuthClientWrapper from './components/AuthClientWrapper';
+import { GlobalProviders } from '@/components/GlobalProviders';
 
 const fontSans = FontSans({
   subsets: ["latin"],
@@ -31,7 +32,7 @@ export default async function LocaleLayout({
 }) {
   // Debug locale detection
   console.log('[LocaleLayout] Requested locale:', locale);
-  
+
   // Validate that the incoming locale is supported
   if (!routing.locales.includes(locale as any)) {
     console.error(`Unsupported locale: ${locale}, redirecting to 404`);
@@ -39,8 +40,8 @@ export default async function LocaleLayout({
   }
 
   // Set the locale for Server Components
-  setRequestLocale(locale); 
-  
+  setRequestLocale(locale);
+
   // Load messages directly instead of using getMessages()
   let messages;
   try {
@@ -48,13 +49,13 @@ export default async function LocaleLayout({
     messages = {
       common: (await import(`../../locales/${locale}/common.json`)).default
     };
-    
-    console.log(`[LocaleLayout] Loaded ${locale} messages directly:`, 
+
+    console.log(`[LocaleLayout] Loaded ${locale} messages directly:`,
       Object.keys(messages.common).slice(0, 5).join(', ')
     );
   } catch (error) {
     console.error(`[LocaleLayout] Error loading ${locale} messages:`, error);
-    
+
     // Fallback to English if there's an error
     try {
       messages = {
@@ -71,12 +72,13 @@ export default async function LocaleLayout({
     <html lang={locale} suppressHydrationWarning>
       <body className={cn("min-h-screen font-sans antialiased", fontSans.variable)}>
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
-            {/* Configure NextIntlClientProvider without function handlers */}
-            <NextIntlClientProvider 
-              locale={locale} 
-              messages={messages}
-              timeZone="UTC"
-            >
+          {/* Configure NextIntlClientProvider without function handlers */}
+          <NextIntlClientProvider
+            locale={locale}
+            messages={messages}
+            timeZone="UTC"
+          >
+            <GlobalProviders>
               <div className="relative flex min-h-screen flex-col">
                 <div className="fixed top-0 right-0 z-50 p-2 text-xs bg-black text-white">
                   Current locale: {locale}
@@ -88,8 +90,9 @@ export default async function LocaleLayout({
                 <Footer />
                 {/* <LocaleDebug /> */}
               </div>
-              <Toaster />
-            </NextIntlClientProvider>
+            </GlobalProviders>
+            <Toaster />
+          </NextIntlClientProvider>
         </ThemeProvider>
       </body>
     </html>
