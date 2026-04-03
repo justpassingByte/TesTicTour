@@ -3,7 +3,7 @@
 import * as React from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { Home, Trophy, Users, Menu, X, BarChart3, Gamepad2, LayoutDashboard } from "lucide-react"
+import { Home, Trophy, Gift, Menu, X, BarChart3, Gamepad2, LayoutDashboard } from "lucide-react"
 import { useEffect } from "react"
 
 import { cn } from "@/lib/utils"
@@ -73,9 +73,9 @@ export function MainNav({
       icon: <Gamepad2 className="h-5 w-5" />,
     },
     {
-      href: "/players",
-      label: t("players"),
-      icon: <Users className="h-5 w-5" />,
+      href: "/loyalty",
+      label: t("loyalty", { defaultValue: 'Loyalty' }),
+      icon: <Gift className="h-5 w-5" />,
     },
     {
       href: "/leaderboard",

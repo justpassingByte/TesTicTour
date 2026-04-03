@@ -285,6 +285,7 @@ export default function TournamentsClientPage({ initialTournaments }: Tournament
 }
 
 function TournamentCard({ tournament, index }: { tournament: ITournament; index: number }) {
+  const t = useTranslations('common');
   const statusColors = {
     in_progress: "bg-primary/20 text-primary border-primary/20 animate-pulse-subtle",
     UPCOMING: "bg-yellow-500/20 text-yellow-500 border-yellow-500/20",
@@ -299,7 +300,13 @@ function TournamentCard({ tournament, index }: { tournament: ITournament; index:
 
   const formattedDate = new Date(tournament.startTime).toLocaleDateString();
   const formattedTime = new Date(tournament.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-  const registrationFeeDisplay = tournament.entryFee === 0 ? 'Free' : `$${tournament.entryFee}`;
+  const registrationFeeDisplay = tournament.entryFee === 0 ? '0' : `$${tournament.entryFee}`;
+
+  // Helper to safely translate status
+  const getStatusTranslation = (status: string) => {
+    const key = status.toLowerCase();
+    return t.has(key) ? t(key) : status.replace(/_/g, ' ');
+  };
 
   return (
     <Card 
@@ -307,26 +314,30 @@ function TournamentCard({ tournament, index }: { tournament: ITournament; index:
       style={{ animationDelay: `${index * 100}ms` }}
     >
       <CardHeader className="p-0">
-        <div className="relative aspect-[16/9] w-full overflow-hidden">
-          <Image
-            width={400}
-            height={225}
-            src={tournament.image || "/TFT.jfif"}
-            alt={tournament.name}
-            className="object-cover w-full h-full"
-          />
-          <div className="absolute top-4 left-4 right-4 flex justify-between">
-            <Badge variant="outline" className={`${statusColor} capitalize`}>
-              {tournament.status.replace(/_/g, ' ')}
-            </Badge>
-            <Badge variant="outline" className="bg-transparent backdrop-blur-sm">
-              {tournament.region}
-            </Badge>
+        <Link href={`/tournaments/${tournament.id}`} className="block">
+          <div className="relative aspect-[16/9] w-full overflow-hidden">
+            <Image
+              width={400}
+              height={225}
+              src={tournament.image || "/TFT.jfif"}
+              alt={tournament.name}
+              className="object-cover w-full h-full transition-transform duration-300 hover:scale-105"
+            />
+            <div className="absolute top-4 left-4 right-4 flex justify-between">
+              <Badge variant="outline" className={`${statusColor} capitalize`}>
+                {getStatusTranslation(tournament.status)}
+              </Badge>
+              <Badge variant="outline" className="bg-transparent backdrop-blur-sm">
+                {t('region_label', { region: tournament.region })}
+              </Badge>
+            </div>
           </div>
-        </div>
+        </Link>
       </CardHeader>
       <CardContent className="p-6">
-        <CardTitle className="mb-2 line-clamp-1">{tournament.name}</CardTitle>
+        <Link href={`/tournaments/${tournament.id}`} className="hover:underline">
+          <CardTitle className="mb-2 line-clamp-1">{tournament.name}</CardTitle>
+        </Link>
         <p className="text-sm text-muted-foreground line-clamp-2 mb-4">{tournament.description}</p>
         <div className="grid gap-2">
           <div className="flex items-center text-sm text-muted-foreground">
@@ -339,14 +350,14 @@ function TournamentCard({ tournament, index }: { tournament: ITournament; index:
           </div>
           <div className="flex items-center text-sm text-muted-foreground">
             <MapPin className="mr-2 h-4 w-4" />
-            <span>{tournament.region} Region</span>
+            <span>{t('region_label', { region: tournament.region })}</span>
           </div>
           <div className="flex items-center justify-between text-sm mt-2">
-            <span>Registration Fee:</span>
+            <span>{t('registration_fee')}:</span>
             <span className="font-medium">{registrationFeeDisplay}</span>
           </div>
           <div className="flex items-center justify-between text-sm">
-            <span>Participants:</span>
+            <span>{t('players')}:</span>
             <span className="font-medium">
               {tournament.registered || 0}/{tournament.maxPlayers}
             </span>
@@ -356,18 +367,18 @@ function TournamentCard({ tournament, index }: { tournament: ITournament; index:
       <CardFooter className="flex justify-between p-6 pt-0">
         <Link href={`/tournaments/${tournament.id}`}>
           <Button variant="ghost" className="flex items-center gap-1">
-            View
+            {t('view')}
             <ArrowRight className="ml-1 h-4 w-4" />
           </Button>
         </Link>
         {tournament.status === "UPCOMING" && !tournament.registered && (
           <Link href={`/tournaments/${tournament.id}/register`}>
-            <Button>Register Now</Button>
+            <Button>{t('register_now')}</Button>
           </Link>
         )}
         {tournament.registered && (
           <Badge variant="outline" className="bg-transparent">
-            Registered
+            {t('registration')}
           </Badge>
         )}
       </CardFooter>

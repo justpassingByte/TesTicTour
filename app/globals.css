@@ -65,7 +65,7 @@
 }
 
 html, body, .bg-background {
-  background: linear-gradient(120deg, #1ecfff 0%, #e0eafc 40%, #fbc2eb 80%, #a1c4fd 100%);
+  background: linear-gradient(135deg, #a6b8e3 0%, #e2c2f0 100%);
   background-attachment: fixed;
 }
 .dark html, .dark body, .dark .bg-background {

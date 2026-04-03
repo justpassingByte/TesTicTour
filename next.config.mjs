@@ -18,6 +18,12 @@ const nextConfig = {
         port: '',
         pathname: '/uploads/miniTourLobbies/**',
       },
+      {
+        protocol: 'https',
+        hostname: 'images.unsplash.com',
+        port: '',
+        pathname: '/**',
+      },
     ],
   },
   async rewrites() {

@@ -73,6 +73,24 @@ interface PaginatedResponse<T> {
   offset: number;
 }
 
+export interface LeaderboardPlayer {
+  id: string;
+  username: string;
+  riotGameName: string;
+  riotGameTag: string;
+  region: string;
+  rank: string;
+  totalMatchesPlayed: number;
+  averagePlacement: number;
+  topFourRate: number;
+  firstPlaceRate: number;
+  tournamentsPlayed: number;
+  tournamentsWon: number;
+  totalPoints: number;
+  lobbiesPlayed: number;
+  createdAt: string;
+}
+
 export class PlayerService {
   private static cache = {
     playerDetails: new Map<string, { data: PlayerDetails, timestamp: number }>(),
@@ -85,6 +103,19 @@ export class PlayerService {
     return Date.now() - timestamp < 60 * 1000; // Cache valid for 1 minute
   }
 
+  // Public leaderboard endpoint (no auth required)
+  static async getLeaderboard(search?: string, limit: number = 50, offset: number = 0): Promise<PaginatedResponse<LeaderboardPlayer>> {
+    try {
+      const params: Record<string, string | number> = { limit, offset };
+      if (search) params.search = search;
+      const response = await api.get('/players/leaderboard', { params });
+      return response.data;
+    } catch (error) {
+      console.error('Failed to fetch leaderboard:', error);
+      throw new Error('Failed to fetch leaderboard');
+    }
+  }
+
   // Removed getParticipantHistory - not needed with new PlayerDetails endpoint
   static async getPlayerMatchSummaries(playerId: string, limit: number = 10, offset: number = 0): Promise<PaginatedResponse<PlayerMatchSummary>> {
     try {
@@ -95,13 +126,13 @@ export class PlayerService {
       throw new Error('Failed to fetch player match summaries');
     }
   }
-  static async getMatchResults(matchId: string): Promise<PaginatedResponse<PlayerMatchSummary>> {
+  static async getMatchFullDetails(matchId: string): Promise<any> {
     try {
-      const response = await api.get(`/${matchId}/results`);
+      const response = await api.get(`/${matchId}/full-details`);
       return response.data;
     } catch (error) {
-      console.error('Failed to fetch match results:', error);
-      throw new Error('Failed to fetch match results');
+      console.error('Failed to fetch full match details:', error);
+      throw new Error('Failed to fetch full match details');
     }
   }
   // Renamed and updated getPlayerMatchSummaries

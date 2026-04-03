@@ -3,6 +3,8 @@ import { getTranslations } from 'next-intl/server';
 import HomePageClient from './components/HomePageClient';
 import { TournamentService } from "@/app/services/TournamentService"
 import { ITournament } from "@/app/types/tournament"
+import api from "@/app/lib/apiConfig"
+import { MiniTourLobby } from "@/app/stores/miniTourLobbyStore"
 
 export const metadata = {
   title: "TesTicTour - Tournament Platform for TFT Players",
@@ -20,13 +22,27 @@ async function getTournaments() {
   }
 }
 
+async function getMiniTourLobbies(): Promise<MiniTourLobby[]> {
+  try {
+    const response = await api.get("/minitour-lobbies")
+    if (response.data && response.data.success) {
+      return response.data.data
+    }
+    return []
+  } catch (error) {
+    console.error("Error fetching MiniTour lobbies:", error)
+    return []
+  }
+}
+
 export default async function HomePage() {
   const t = await getTranslations('common');
   const tournaments = await getTournaments();
+  const lobbies = await getMiniTourLobbies();
   
   return (
     <Suspense fallback={<HomePageSkeleton />}>
-      <HomePageClient tournaments={tournaments} />
+      <HomePageClient tournaments={tournaments} lobbies={lobbies} />
     </Suspense>
   )
 }
@@ -83,6 +99,27 @@ function HomePageSkeleton() {
         </div>
       </section>
 
+      {/* MiniTour Skeleton */}
+      <section className="py-12 bg-primary/5 border-y">
+        <div className="container">
+          <div className="h-8 bg-muted rounded-md w-64 mb-2"></div>
+          <div className="h-5 bg-muted rounded-md w-96 mb-6"></div>
+          <div className="grid md:grid-cols-3 gap-6">
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="border rounded-lg p-6 animate-pulse">
+                <div className="h-6 bg-muted rounded w-3/4 mb-3"></div>
+                <div className="h-4 bg-muted rounded w-1/2 mb-4"></div>
+                <div className="space-y-2">
+                  <div className="h-4 bg-muted rounded w-full"></div>
+                  <div className="h-4 bg-muted rounded w-full"></div>
+                </div>
+                <div className="h-10 bg-muted rounded w-full mt-4"></div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* Tournament Directory Skeleton */}
       <section className="py-12 bg-background/60 dark:bg-background/40 backdrop-blur-lg border-t border-b border-white/20">
         <div className="container space-y-8">
@@ -119,4 +156,4 @@ function HomePageSkeleton() {
       </section>
     </div>
   )
-} 
+}

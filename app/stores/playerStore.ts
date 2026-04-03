@@ -67,6 +67,7 @@ interface PlayerState {
   playerTournaments: PlayerTournamentDisplay[];
   playerMatches: PlayerMatchDisplay[];
   matchResults: PlayerMatchDisplay[];
+  matchDetailsRaw: any; // Raw Match Data from Riot
   stats: PlayerStats; // Directly use the backend's PlayerStats
   isLoading: boolean;
   error: string | null;
@@ -84,6 +85,7 @@ export const usePlayerStore = create<PlayerState>((set, get) => ({
   playerTournaments: [],
   playerMatches: [],
   matchResults: [],
+  matchDetailsRaw: null,
   stats: {
     tournamentsPlayed: 0,
     tournamentsWon: 0,
@@ -115,23 +117,14 @@ export const usePlayerStore = create<PlayerState>((set, get) => ({
   },
   fetchPlayerMatchResults: async (matchId: string) => {
     try {
-      set({ isLoading: true, error: null });
-      const response = await PlayerService.getMatchResults(matchId);
-      const summaries: PlayerMatchSummary[] = response.data;
-      const matchResults: PlayerMatchDisplay[] = summaries.map((summary) => ({
-        id: summary.id, // Assuming summary.id is the match summary ID or unique identifier
-        tournamentId: summary.tournamentId,
-        tournamentName: summary.tournamentName,
-        roundNumber: summary.roundNumber,
-        matchId: summary.matchId,
-        placement: summary.placement,
-        points: summary.points,
-        date: new Date(summary.playedAt).toLocaleDateString(),
-        userId: summary.userId,
-      }));
-      set({ matchResults: matchResults });
+      set({ isLoading: true, error: null, matchDetailsRaw: null });
+      const rawDetails = await PlayerService.getMatchFullDetails(matchId);
+      // Wait, is it returning the whole JSON object or `{ results: ... }`?
+      // In MatchController: res.json(details); so it's rawDetails.
+      set({ matchDetailsRaw: rawDetails, matchResults: [] }); // Set matchResults empty, as we're switching to raw
     } catch (error) {
-      set({ error: 'Failed to fetch match results' });
+      console.error(error);
+      set({ error: 'Failed to fetch match details' });
     } finally {
       set({ isLoading: false });
     }

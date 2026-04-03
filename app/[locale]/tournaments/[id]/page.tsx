@@ -99,7 +99,7 @@ export default async function TournamentPage({ params }: { params: { id: string 
                 <Image
                   width={1000}
                   height={1000}
-                  src={tournament.image || '/TFT.jfif'}
+                  src={tournament.image || 'https://images.unsplash.com/photo-1542751371-adc38448a05e?auto=format&fit=crop&q=80'}
                   alt={tournament.name}
                   className="object-cover"
                 />

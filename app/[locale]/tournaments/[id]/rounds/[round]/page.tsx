@@ -8,8 +8,7 @@ import { RoundSummary } from "@/app/[locale]/tournaments/[id]/components/round/R
 import { RoundTabs } from "@/app/[locale]/tournaments/[id]/components/round/RoundTabs"
 import { RoundResultsLoading } from "@/app/[locale]/tournaments/[id]/components/round/RoundResultsLoading"
 
-export default function RoundResultsPage({ params: paramsPromise }: { params: Promise<{ id: string; round: string }> }) {
-  const params = use(paramsPromise)
+export default function RoundResultsPage({ params }: { params: { id: string; round: string } }) {
   const {
     currentTournament,
     fetchRoundDetails,
